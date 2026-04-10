@@ -40,6 +40,19 @@ export interface GenerateOptions extends BuildPromptInput {
 }
 
 /**
+ * Escape HTML special chars so a user-supplied store name can't break out of
+ * the footer we inject. Small, no-dependency implementation.
+ */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
  * Non-streaming generation — returns the full HTML string once done.
  *
  * Implements a small fallback loop: if Claude returns a 404 or 424
@@ -70,14 +83,28 @@ export async function generateSiteHtml(opts: GenerateOptions): Promise<string> {
       // Strip accidental markdown code fences
       html = html.replace(/^```(?:html)?\s*\n?/i, "").replace(/\n?```\s*$/i, "");
 
-      // Ensure mandatory footer is present
-      if (!html.includes("花蓮瓊瑤打字行")) {
-        throw new Error("Generated HTML is missing the mandatory footer");
-      }
-
-      // Sanity check for DOCTYPE
+      // Sanity check for DOCTYPE — this is non-recoverable, Claude must output real HTML
       if (!/^<!doctype html/i.test(html)) {
         throw new Error("Generated HTML does not start with <!DOCTYPE html>");
+      }
+
+      // Auto-repair: if Claude forgot the mandatory footer, inject it ourselves
+      // rather than failing the whole generation. Throwing here used to force
+      // the user to retry from scratch (and burn their free-tier quota for
+      // nothing). See: 2026-04-10 "missing the mandatory footer" incident.
+      if (!html.includes("花蓮瓊瑤打字行")) {
+        console.warn(
+          `[anthropic] model=${modelId} omitted the mandatory footer — auto-injecting`,
+        );
+        const injectedFooter = `<footer style="padding:2rem 1rem;text-align:center;font-size:0.875rem;color:var(--muted,#6b7280);border-top:1px solid var(--border,#e5e7eb);margin-top:3rem;">${escapeHtml(opts.storeName)} ｜ 2026 Design by 花蓮瓊瑤打字行</footer>`;
+
+        if (/<\/body>/i.test(html)) {
+          html = html.replace(/<\/body>/i, `${injectedFooter}</body>`);
+        } else if (/<\/html>/i.test(html)) {
+          html = html.replace(/<\/html>/i, `${injectedFooter}</html>`);
+        } else {
+          html = html + injectedFooter;
+        }
       }
 
       console.log(`[anthropic] generated with model=${modelId}`);
