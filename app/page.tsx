@@ -128,7 +128,7 @@ export default async function HomePage() {
               </a>
             </div>
             <p className="text-xs text-[var(--color-muted-foreground)]">
-              ✦ 每日限 1 次 ✦ 預覽免費 ✦ 付款後可下載或一鍵部署 GitHub Pages
+              ✦ 終身 1 次免費 ✦ 24 小時預覽 ✦ NT$490 解鎖永久保留 + 下載 + GitHub 部署
             </p>
           </div>
 
@@ -209,7 +209,7 @@ export default async function HomePage() {
             <div className="rounded-3xl border-2 border-dashed border-[var(--color-primary)]/30 bg-white/60 p-16 text-center backdrop-blur">
               <p className="text-3xl font-black">請先登入才能開始生成 🎨</p>
               <p className="mt-4 text-base text-[var(--color-muted-foreground)]">
-                我們使用 Google 登入來防止濫用 · 每個帳號每日限 1 次生成
+                我們使用 Google 登入來防止濫用 · 每個帳號終身 1 次免費生成
               </p>
             </div>
           )}

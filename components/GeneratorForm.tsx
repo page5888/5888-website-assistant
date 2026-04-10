@@ -100,6 +100,58 @@ export function GeneratorForm() {
         🎨 店家資料輸入
       </h2>
 
+      {/* Rules info card — always visible so users know exactly what
+          they get before hitting "開始生成". Historically users were
+          confused about lifetime-free vs daily-free, and didn't know
+          there was a 24h TTL on the preview. */}
+      <section
+        aria-labelledby="rules-title"
+        className="md:col-span-2 rounded-2xl border border-[var(--color-primary)]/20 bg-gradient-to-br from-amber-50 via-white to-purple-50 p-5 text-sm"
+      >
+        <div className="flex items-start gap-3">
+          <span
+            aria-hidden
+            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-lg"
+          >
+            💡
+          </span>
+          <div className="flex-1">
+            <h3 id="rules-title" className="font-bold text-[var(--color-foreground)]">
+              生成規則 · 請先閱讀
+            </h3>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-amber-200 bg-white/80 p-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-amber-700">
+                  🆓 免費版
+                </p>
+                <ul className="mt-2 space-y-1 text-xs text-[var(--color-muted-foreground)]">
+                  <li>• 每個帳號 <strong>終身 1 次</strong> 免費生成</li>
+                  <li>• 預覽網頁 <strong>24 小時後自動消失</strong></li>
+                  <li>• 成品會有 5888 浮水印</li>
+                  <li>• 不可下載 / 不可部署</li>
+                </ul>
+              </div>
+              <div className="rounded-xl border border-purple-200 bg-white/80 p-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-purple-700">
+                  💎 完整版 · NT$490 / 單一網站
+                </p>
+                <ul className="mt-2 space-y-1 text-xs text-[var(--color-muted-foreground)]">
+                  <li>• 移除浮水印 · <strong>永久保留</strong></li>
+                  <li>• 下載 index.html / 一鍵部署 GitHub Pages</li>
+                  <li>• 可使用 <strong>30 次</strong> 修改(每天 1 次)</li>
+                  <li>• 想做第二個網站需再付一次 NT$490</li>
+                </ul>
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">
+              ⚠️ 生成前請務必確認店名、類別、圖片都正確;免費版只有 1 次機會,
+              生成後請 <strong>仔細檢查預覽</strong>(尤其是圖片有沒有破掉),
+              確認無誤再付款解鎖。付款後無法退款。
+            </p>
+          </div>
+        </div>
+      </section>
+
       <Field label="店家名稱 *" name="storeName" required>
         <input
           name="storeName"
@@ -214,10 +266,7 @@ export function GeneratorForm() {
         onRetry={closeOverlay}
       />
 
-      <div className="md:col-span-2 flex items-center justify-between pt-2">
-        <p className="text-xs text-[var(--color-muted-foreground)]">
-          ⚠️ 免費版:一生 1 次生成 · 24 小時後自動消失
-        </p>
+      <div className="md:col-span-2 flex flex-wrap items-center justify-end gap-3 pt-2">
         <button
           type="submit"
           disabled={loading || !form.storeName}
