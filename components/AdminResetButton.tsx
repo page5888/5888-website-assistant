@@ -20,14 +20,21 @@ export function AdminResetButton() {
       const res = await fetch("/api/admin/reset", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      setMsg("✅ 已重置,可以繼續測試了");
+      // Log full breakdown to console for deeper debugging
+      console.log("[admin-reset]", data);
+      const n = typeof data.totalDeleted === "number" ? data.totalDeleted : 0;
+      setMsg(
+        n > 0
+          ? `✅ 已清除 ${n} 個限額 key,可以繼續測試了`
+          : "⚠️ 沒有找到任何限額 key — 你本來就沒被擋,可以直接生成",
+      );
     } catch (err) {
       setMsg(
         "❌ 重置失敗:" + (err instanceof Error ? err.message : String(err)),
       );
     } finally {
       setBusy(false);
-      setTimeout(() => setMsg(null), 4000);
+      setTimeout(() => setMsg(null), 6000);
     }
   }
 
