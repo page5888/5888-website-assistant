@@ -15,7 +15,8 @@ export default auth((req) => {
     req.nextUrl.pathname.startsWith("/api/checkout") ||
     req.nextUrl.pathname.startsWith("/api/pay") ||
     req.nextUrl.pathname.startsWith("/api/deploy") ||
-    req.nextUrl.pathname.startsWith("/api/download");
+    req.nextUrl.pathname.startsWith("/api/download") ||
+    req.nextUrl.pathname.startsWith("/api/admin");
 
   if (isProtected && !req.auth) {
     return NextResponse.redirect(new URL("/", req.url));
@@ -31,5 +32,6 @@ export const config = {
     "/api/pay/:path*",
     "/api/deploy/:path*",
     "/api/download/:path*",
+    "/api/admin/:path*",
   ],
 };

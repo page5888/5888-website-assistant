@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ChangeEvent } from "react";
+import { GenerationOverlay, type GenerationStatus } from "./GenerationOverlay";
 
 interface FormState {
   storeName: string;
@@ -24,12 +24,12 @@ const initialForm: FormState = {
 };
 
 export function GeneratorForm() {
-  const router = useRouter();
   const [form, setForm] = useState<FormState>(initialForm);
   const [userImages, setUserImages] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<GenerationStatus>("idle");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [stage, setStage] = useState<string>("");
+  const loading = status === "running";
 
   function onChange(
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
@@ -56,8 +56,8 @@ export function GeneratorForm() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    setLoading(true);
-    setStage("正在蒐集圖片並呼叫 AI,請稍候約 30-90 秒...");
+    setPreviewUrl(null);
+    setStatus("running");
 
     try {
       const res = await fetch("/api/generate", {
@@ -71,13 +71,19 @@ export function GeneratorForm() {
         throw new Error(data.error || "生成失敗");
       }
 
-      setStage("生成完成,正在前往預覽...");
-      router.push(data.previewUrl as string);
+      // Do NOT auto-navigate. Let the user click through themselves so
+      // they feel in control, and so they can admire the finished card.
+      setPreviewUrl(data.previewUrl as string);
+      setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
-      setLoading(false);
-      setStage("");
+      setStatus("error");
     }
+  }
+
+  function closeOverlay() {
+    setStatus("idle");
+    setError(null);
   }
 
   return (
@@ -191,7 +197,7 @@ export function GeneratorForm() {
         )}
       </Field>
 
-      {error && (
+      {error && status !== "error" && (
         <div
           role="alert"
           className="md:col-span-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800"
@@ -200,18 +206,16 @@ export function GeneratorForm() {
         </div>
       )}
 
-      {stage && (
-        <p
-          className="md:col-span-2 text-sm text-[var(--color-muted-foreground)]"
-          aria-live="polite"
-        >
-          {stage}
-        </p>
-      )}
+      <GenerationOverlay
+        status={status}
+        error={error}
+        previewUrl={previewUrl}
+        onRetry={closeOverlay}
+      />
 
       <div className="md:col-span-2 flex items-center justify-between pt-2">
         <p className="text-xs text-[var(--color-muted-foreground)]">
-          ⚠️ 每日僅限 1 次生成機會
+          ⚠️ 免費版:一生 1 次生成 · 24 小時後自動消失
         </p>
         <button
           type="submit"
