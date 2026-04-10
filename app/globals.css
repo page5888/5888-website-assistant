@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Noto Sans TC", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Playfair Display", "Noto Serif TC", ui-serif, Georgia, serif;
+
+  /* Base surfaces */
+  --color-background: oklch(0.99 0.005 95);
+  --color-foreground: oklch(0.16 0.03 285);
+  --color-surface: oklch(1 0 0);
+  --color-surface-elevated: oklch(0.98 0.015 285);
+
+  /* Brand triad */
+  --color-primary: oklch(0.53 0.27 285);          /* Deep violet */
+  --color-primary-foreground: oklch(0.99 0.005 95);
+  --color-secondary: oklch(0.68 0.19 195);        /* Cyan */
+  --color-secondary-foreground: oklch(0.12 0.04 220);
+  --color-accent: oklch(0.78 0.17 60);            /* Warm amber */
+  --color-accent-foreground: oklch(0.2 0.05 60);
+  --color-success: oklch(0.7 0.18 155);
+
+  /* Muted / border */
+  --color-muted: oklch(0.965 0.012 285);
+  --color-muted-foreground: oklch(0.45 0.02 285);
+  --color-border: oklch(0.9 0.012 285);
+
+  /* Gradients (used via background-image utilities) */
+  --gradient-hero: linear-gradient(
+    135deg,
+    oklch(0.53 0.27 285) 0%,
+    oklch(0.58 0.24 320) 45%,
+    oklch(0.72 0.2 45) 100%
+  );
+  --gradient-aurora: radial-gradient(
+      ellipse 80% 60% at 20% 20%,
+      oklch(0.7 0.25 285 / 0.5),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 80% 30%,
+      oklch(0.75 0.22 195 / 0.45),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 70% 60% at 50% 90%,
+      oklch(0.8 0.2 45 / 0.4),
+      transparent 60%
+    );
+  --gradient-dark: linear-gradient(
+    135deg,
+    oklch(0.15 0.04 285) 0%,
+    oklch(0.2 0.08 260) 60%,
+    oklch(0.25 0.1 320) 100%
+  );
+  --gradient-subtle: linear-gradient(
+    180deg,
+    oklch(0.99 0.005 95) 0%,
+    oklch(0.96 0.018 285) 100%
+  );
+}
+
+html,
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+/* Utility: gradient text */
+.text-gradient {
+  background-image: var(--gradient-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Utility: soft grain overlay */
+.grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.15;
+}
+
+/* Utility: soft dotted pattern */
+.dots {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    oklch(0.55 0.25 285 / 0.22) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+}
