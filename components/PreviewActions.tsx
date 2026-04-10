@@ -9,7 +9,7 @@ export function PreviewActions({
   siteId: string;
   initialPaid: boolean;
 }) {
-  const [paid, setPaid] = useState(initialPaid);
+  const [paid] = useState(initialPaid);
   const [busy, setBusy] = useState<"pay" | "deploy" | "download" | null>(null);
   const [deployResult, setDeployResult] = useState<{
     pagesUrl: string;
@@ -17,21 +17,31 @@ export function PreviewActions({
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Start ECPay checkout. We POST to /api/checkout which returns an
+   * auto-submitting HTML form. We open a new window, write the HTML
+   * into it, and the form auto-POSTs the user over to ECPay.
+   */
   async function pay() {
     setBusy("pay");
     setError(null);
     try {
-      const res = await fetch("/api/pay", {
+      const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ siteId }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "付款失敗");
-      setPaid(true);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `建立訂單失敗 (${res.status})`);
+      }
+      const html = await res.text();
+      // Replace current document with the returned auto-submit form
+      document.open();
+      document.write(html);
+      document.close();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
-    } finally {
       setBusy(null);
     }
   }
@@ -94,17 +104,25 @@ export function PreviewActions({
       )}
 
       {!paid ? (
-        <button
-          type="button"
-          onClick={pay}
-          disabled={busy === "pay"}
-          className="rounded-full bg-[var(--color-accent)] px-5 py-2 text-sm font-semibold text-white shadow hover:opacity-90 disabled:opacity-50"
-          aria-label="付款解鎖下載"
-        >
-          {busy === "pay" ? "處理中..." : "💳 付款(模擬)"}
-        </button>
+        <>
+          <span className="hidden text-xs text-[var(--color-muted-foreground)] sm:inline">
+            免費預覽 24 小時後消失 · 付款即永久保留
+          </span>
+          <button
+            type="button"
+            onClick={pay}
+            disabled={busy === "pay"}
+            className="rounded-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-purple-500/30 hover:opacity-90 disabled:opacity-50"
+            aria-label="付款 NT$490 解鎖完整版"
+          >
+            {busy === "pay" ? "跳轉中..." : "💎 解鎖完整版 NT$490"}
+          </button>
+        </>
       ) : (
         <>
+          <span className="hidden text-xs font-semibold text-green-700 sm:inline">
+            ✨ 已解鎖完整版
+          </span>
           <button
             type="button"
             onClick={download}

@@ -6,10 +6,12 @@ import { PreviewActions } from "@/components/PreviewActions";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ paid?: string }>;
 }
 
-export default async function PreviewPage({ params }: PageProps) {
+export default async function PreviewPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const { paid: paidQuery } = await searchParams;
   const session = await auth();
 
   if (!session?.user) {
@@ -36,12 +38,22 @@ export default async function PreviewPage({ params }: PageProps) {
   const meta: {
     storeName: string;
     paid?: boolean;
+    expiresAt?: number;
     deploy?: { pagesUrl: string; repoUrl: string };
   } = typeof metaRaw === "string" ? JSON.parse(metaRaw) : metaRaw;
 
+  const isPaid = meta.paid === true || paidQuery === "1";
+
+  // Compute remaining hours for the free-tier expiry countdown
+  let hoursLeft: number | null = null;
+  if (!isPaid && meta.expiresAt) {
+    const ms = meta.expiresAt - Date.now();
+    hoursLeft = Math.max(0, Math.ceil(ms / (60 * 60 * 1000)));
+  }
+
   return (
     <main className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between border-b bg-white/90 px-6 py-4 backdrop-blur">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b bg-white/90 px-6 py-4 backdrop-blur">
         <div>
           <Link
             href="/"
@@ -54,8 +66,18 @@ export default async function PreviewPage({ params }: PageProps) {
           <span className="ml-3 text-sm text-[var(--color-muted-foreground)]">
             預覽:{meta.storeName}
           </span>
+          {!isPaid && hoursLeft !== null && (
+            <span className="ml-3 inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+              ⏰ {hoursLeft} 小時後消失
+            </span>
+          )}
+          {isPaid && (
+            <span className="ml-3 inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
+              ✨ 已永久保留
+            </span>
+          )}
         </div>
-        <PreviewActions siteId={id} initialPaid={meta.paid ?? false} />
+        <PreviewActions siteId={id} initialPaid={isPaid} />
       </header>
 
       <div className="flex-1 bg-[var(--color-muted)] p-4">
