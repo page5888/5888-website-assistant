@@ -68,7 +68,8 @@ export function GeneratorForm() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "生成失敗");
+        const detail = data.detail ? ` (${String(data.detail).slice(0, 200)})` : "";
+        throw new Error((data.error || "生成失敗") + detail);
       }
 
       // Do NOT auto-navigate. Let the user click through themselves so
