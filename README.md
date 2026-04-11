@@ -117,4 +117,4 @@ Google OAuth redirect URI 要加上 production domain。
 
 ---
 
-Web-Cteater ｜ 2026 Design by 花蓮瓊瑤打字行
+Web-Cteater ｜ 2026 Design by 幸福瓢蟲手作雜貨

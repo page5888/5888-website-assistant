@@ -3,11 +3,11 @@ import Link from "next/link";
 export const metadata = {
   title: "定價 | 5888 網站助手",
   description:
-    "免費試用 1 次,完整版一次付費 NT$490 永久保留、30 次修改、自動部署到 GitHub。",
+    "免費試用 2 次,完整版一次付費 NT$490 永久保留、30 次修改、自動部署到 GitHub。",
 };
 
 const FREE_FEATURES = [
-  { text: "1 次 AI 生成", ok: true },
+  { text: "2 次 AI 生成", ok: true },
   { text: "24 小時預覽", ok: true },
   { text: "右下角浮水印", ok: false },
   { text: "永久保留", ok: false },
@@ -17,7 +17,7 @@ const FREE_FEATURES = [
 ];
 
 const PAID_FEATURES = [
-  { text: "1 次 AI 生成", ok: true },
+  { text: "♾️ 付費後可重新生成 + 逐張換圖", ok: true },
   { text: "♾️ 永久保留", ok: true },
   { text: "✨ 移除浮水印", ok: true },
   { text: "⬇️ 下載 HTML 原始檔", ok: true },
@@ -45,6 +45,12 @@ export default function PricingPage() {
               className="font-semibold text-[var(--color-primary)]"
             >
               定價
+            </Link>
+            <Link
+              href="/changelog"
+              className="hover:text-[var(--color-primary)]"
+            >
+              更新紀錄
             </Link>
           </nav>
         </div>
@@ -76,7 +82,7 @@ export default function PricingPage() {
           <div className="mt-6 flex items-baseline gap-1">
             <span className="text-5xl font-black">NT$0</span>
             <span className="text-sm text-[var(--color-muted-foreground)]">
-              / 一次
+              / 共 2 次
             </span>
           </div>
           <ul className="mt-8 space-y-3 text-sm">
@@ -95,7 +101,7 @@ export default function PricingPage() {
             href="/"
             className="mt-8 block rounded-full border-2 border-[var(--color-primary)] px-6 py-3 text-center font-semibold text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-foreground)]"
           >
-            免費試用 1 次
+            免費試用 2 次
           </Link>
         </article>
 
@@ -184,7 +190,7 @@ export default function PricingPage() {
       </section>
 
       <footer className="border-t border-[var(--color-border)] bg-white py-8 text-center text-sm text-[var(--color-muted-foreground)]">
-        5888 網站助手 ｜ 2026 Design by 花蓮瓊瑤打字行
+        5888 網站助手 ｜ 2026 Design by 幸福瓢蟲手作雜貨
       </footer>
     </main>
   );
