@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EcosystemFooter } from "@/components/EcosystemFooter";
 
 export const metadata = {
   title: "定價 | 5888 網站助手",
@@ -189,9 +190,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-[var(--color-border)] bg-white py-8 text-center text-sm text-[var(--color-muted-foreground)]">
-        5888 網站助手 ｜ 2026 Design by 幸福瓢蟲手作雜貨
-      </footer>
+      <EcosystemFooter variant="light" />
     </main>
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth, signIn, getUserKey } from "@/lib/auth";
 import { GeneratorForm } from "@/components/GeneratorForm";
 import { AccountChip } from "@/components/AccountChip";
+import { EcosystemFooter } from "@/components/EcosystemFooter";
 import { getActiveUserSites } from "@/lib/userSites";
 
 export default async function HomePage() {
@@ -255,17 +256,7 @@ export default async function HomePage() {
       </section>
 
       {/* ============ FOOTER ============ */}
-      <footer className="border-t border-[var(--color-border)] bg-[var(--color-foreground)] py-10 text-center text-sm text-[var(--color-background)]/70">
-        <p>
-          <span className="font-bold text-[var(--color-background)]">
-            5888 網站助手
-          </span>{" "}
-          ｜ 2026 Design by 幸福瓢蟲手作雜貨
-        </p>
-        <p className="mt-2 text-xs text-[var(--color-background)]/40">
-          Powered by Claude 4.6 · Next.js · Vercel · GitHub Pages
-        </p>
-      </footer>
+      <EcosystemFooter variant="dark" />
     </main>
   );
 }

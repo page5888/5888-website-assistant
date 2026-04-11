@@ -126,12 +126,32 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
         </div>
       </div>
 
-      <footer className="flex flex-wrap items-center justify-center gap-4 border-t bg-white px-6 py-3 text-center text-xs text-[var(--color-muted-foreground)]">
+      <footer className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t bg-white px-6 py-3 text-center text-xs text-[var(--color-muted-foreground)]">
         <span>5888 網站助手 ｜ 2026 Design by 幸福瓢蟲手作雜貨</span>
         <span aria-hidden>·</span>
+        <Link href="/pricing" className="hover:text-[var(--color-primary)]">
+          定價
+        </Link>
         <Link href="/changelog" className="hover:text-[var(--color-primary)]">
           更新紀錄
         </Link>
+        <span aria-hidden>·</span>
+        <a
+          href="https://wallet-5888.web.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-[var(--color-primary)]"
+        >
+          5888 生態系首頁 ↗
+        </a>
+        <a
+          href="https://wallet-5888.web.app/history.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-[var(--color-primary)]"
+        >
+          我的點數 ↗
+        </a>
       </footer>
     </main>
   );

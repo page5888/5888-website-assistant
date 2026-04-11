@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EcosystemFooter } from "@/components/EcosystemFooter";
 
 export const metadata = {
   title: "更新紀錄 | 5888 網站助手",
@@ -220,11 +221,7 @@ export default function ChangelogPage() {
       </section>
 
       {/* ============ FOOTER ============ */}
-      <footer className="border-t border-[var(--color-border)] bg-white">
-        <div className="mx-auto max-w-4xl px-6 py-8 text-center text-sm text-[var(--color-foreground)]/60">
-          © 2026 5888 網站助手 ｜ Design by 幸福瓢蟲手作雜貨
-        </div>
-      </footer>
+      <EcosystemFooter variant="light" />
     </main>
   );
 }

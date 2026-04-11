@@ -7,7 +7,19 @@ import { AdminResetButton } from "@/components/AdminResetButton";
 export const metadata: Metadata = {
   title: "5888 網站助手｜AI 店家網站產生器",
   description:
-    "一鍵為你的實體店家生成符合 SEO / AEO / GEO 標準的單頁宣傳網站 — 由頂級大型語言模型驅動,內建 LocalBusiness 結構化資料,讓你的店家在 Google、ChatGPT、Perplexity 都找得到。",
+    "填店名 → AI 出網站,24 小時預覽免費試用。一鍵為你的實體店家生成符合 SEO / AEO / GEO 標準的單頁宣傳網站。",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/logo-64.png", type: "image/png", sizes: "64x64" },
+    ],
+    apple: "/logo-512.png",
+  },
+  openGraph: {
+    title: "5888 網站助手｜AI 店家網站產生器",
+    description: "填店名 → AI 出網站,24 小時預覽免費試用。",
+    images: ["/logo-512.png"],
+  },
 };
 
 export default async function RootLayout({
