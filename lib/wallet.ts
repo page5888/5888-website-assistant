@@ -78,10 +78,11 @@ export interface SpendResponse {
   /**
    * True if this was the user's first purchase on any 5888 site
    * (drives L1=50% / L2=25% commission rates on the wallet side).
-   * Wallet server returns this on both fresh and duplicate replays so
-   * cteater can display / log a consistent value. Added 2026-04-11.
+   * Wallet server returns this on BOTH fresh and duplicate replays
+   * with the exact same shape, so this is non-nullable. Confirmed by
+   * wallet team 2026-04-11.
    */
-  isFirstPurchase?: boolean;
+  isFirstPurchase: boolean;
   metadata?: Record<string, unknown>;
 }
 
