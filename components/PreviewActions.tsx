@@ -1,13 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { ImageReplaceModal, type ImageSlotRow } from "./ImageReplaceModal";
 
 export function PreviewActions({
   siteId,
   initialPaid,
+  price,
+  balance,
+  images = [],
 }: {
   siteId: string;
   initialPaid: boolean;
+  price: number;
+  balance: number;
+  /** Image slots parsed from the stored HTML — only populated for paid sites. */
+  images?: ImageSlotRow[];
 }) {
   const [paid] = useState(initialPaid);
   const [busy, setBusy] = useState<"pay" | "deploy" | "download" | null>(null);
@@ -17,11 +25,21 @@ export function PreviewActions({
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [replaceOpen, setReplaceOpen] = useState(false);
+
+  // The 5888 central wallet does NOT support partial redemption. The user
+  // can either (a) redeem the full order with points if balance >= price,
+  // or (b) pay the full cash amount via ECPay. No mixing. See
+  // memory/project_wallet_integration.md ("wallet does not support partial
+  // redemption") for the rationale.
+  const canRedeemFull = balance >= price;
+  // false = pay cash via ECPay; true = redeem all points, skip ECPay
+  const [redeemMode, setRedeemMode] = useState<boolean>(canRedeemFull);
 
   /**
-   * Start ECPay checkout. We POST to /api/checkout which returns an
-   * auto-submitting HTML form. We open a new window, write the HTML
-   * into it, and the form auto-POSTs the user over to ECPay.
+   * Start checkout. We POST to /api/checkout with the chosen redemption mode.
+   *   - Full redemption: server returns JSON { paid: true, redirect }
+   *   - Cash:            server returns auto-submitting ECPay HTML form
    */
   async function pay() {
     setBusy("pay");
@@ -30,14 +48,29 @@ export function PreviewActions({
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siteId }),
+        body: JSON.stringify({
+          siteId,
+          usePoints: redeemMode ? price : 0,
+        }),
       });
+      const contentType = res.headers.get("content-type") ?? "";
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
+        const data = contentType.includes("application/json")
+          ? await res.json().catch(() => ({}))
+          : {};
         throw new Error(data.error || `建立訂單失敗 (${res.status})`);
       }
+      // Full-redemption path returns JSON with a redirect target
+      if (contentType.includes("application/json")) {
+        const data = (await res.json()) as { paid?: boolean; redirect?: string };
+        if (data.paid && data.redirect) {
+          window.location.href = data.redirect;
+          return;
+        }
+        throw new Error("付款流程異常,請重試");
+      }
+      // Cash path returns an auto-submitting ECPay HTML form
       const html = await res.text();
-      // Replace current document with the returned auto-submit form
       document.open();
       document.write(html);
       document.close();
@@ -116,6 +149,33 @@ export function PreviewActions({
 
       {!paid ? (
         <>
+          {/* Balance card — shown whenever the user has a wallet uid,
+              even if balance is 0, so they know where they stand. */}
+          <div className="flex flex-col items-end gap-0.5 rounded-2xl border border-[var(--color-border)] bg-white/80 px-3 py-2 backdrop-blur">
+            <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
+              <span>💰 5888 點數餘額</span>
+              <strong className="text-[var(--color-foreground)] tabular-nums">
+                {balance.toLocaleString()}
+              </strong>
+            </div>
+            {canRedeemFull ? (
+              <label className="flex items-center gap-1 text-[11px] text-[var(--color-muted-foreground)]">
+                <input
+                  type="checkbox"
+                  checked={redeemMode}
+                  onChange={(e) => setRedeemMode(e.target.checked)}
+                  disabled={busy === "pay"}
+                  className="h-3 w-3 accent-[var(--color-primary)]"
+                />
+                使用 {price} 點免費解鎖
+              </label>
+            ) : (
+              <span className="text-[11px] text-[var(--color-muted-foreground)]">
+                累積至 {price} 點可全額免費解鎖(還差 {price - balance} 點)
+              </span>
+            )}
+          </div>
+
           <span className="hidden max-w-[14rem] text-xs text-amber-700 sm:inline">
             ⚠️ 請先仔細檢查預覽(特別是圖片),確認後再付款。付款後無法退款。
           </span>
@@ -123,10 +183,16 @@ export function PreviewActions({
             type="button"
             onClick={pay}
             disabled={busy === "pay"}
-            className="rounded-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-purple-500/30 hover:opacity-90 disabled:opacity-50"
-            aria-label="付款 NT$490 解鎖完整版"
+            className="rounded-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-purple-500/30 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label={
+              redeemMode ? `使用 ${price} 點免費解鎖` : `付款 NT$${price} 解鎖完整版`
+            }
           >
-            {busy === "pay" ? "跳轉中..." : "💎 解鎖完整版 NT$490"}
+            {busy === "pay"
+              ? "處理中..."
+              : redeemMode
+                ? `🎁 使用 ${price} 點免費解鎖`
+                : `💎 解鎖完整版 NT$${price}`}
           </button>
         </>
       ) : (
@@ -134,6 +200,17 @@ export function PreviewActions({
           <span className="hidden text-xs font-semibold text-green-700 sm:inline">
             ✨ 已解鎖完整版
           </span>
+          {images.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setReplaceOpen(true)}
+              disabled={busy !== null}
+              className="rounded-full border-2 border-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white disabled:opacity-50"
+              aria-label="更換網站上的圖片"
+            >
+              🖼️ 更換圖片
+            </button>
+          )}
           <button
             type="button"
             onClick={download}
@@ -157,6 +234,14 @@ export function PreviewActions({
 
       {helpOpen && (
         <HelpModal paid={paid} onClose={() => setHelpOpen(false)} />
+      )}
+
+      {replaceOpen && (
+        <ImageReplaceModal
+          siteId={siteId}
+          initialImages={images}
+          onClose={() => setReplaceOpen(false)}
+        />
       )}
     </div>
   );

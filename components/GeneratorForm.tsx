@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent, type ChangeEvent } from "react";
 import { GenerationOverlay, type GenerationStatus } from "./GenerationOverlay";
+import { ImageSlotGrid, type FilledSlot } from "./ImageSlotGrid";
+import { MIN_REQUIRED_SLOTS, SLOTS, type SlotId } from "@/lib/imageSlots";
 
 interface FormState {
   storeName: string;
@@ -25,32 +27,26 @@ const initialForm: FormState = {
 
 export function GeneratorForm() {
   const [form, setForm] = useState<FormState>(initialForm);
-  const [userImages, setUserImages] = useState<string[]>([]);
+  const [slots, setSlots] = useState<Partial<Record<SlotId, FilledSlot>>>({});
   const [status, setStatus] = useState<GenerationStatus>("idle");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const loading = status === "running";
 
+  // Count required slots filled so we can gate the submit button and
+  // show a helpful hint when the user is still missing photos.
+  const requiredSlotsFilled = SLOTS.filter(
+    (s) => s.required && slots[s.id],
+  ).length;
+  const canSubmit =
+    !loading &&
+    form.storeName.trim().length > 0 &&
+    requiredSlotsFilled >= MIN_REQUIRED_SLOTS;
+
   function onChange(
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
-  }
-
-  async function onFiles(e: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []).slice(0, 10);
-    const dataUrls = await Promise.all(
-      files.map(
-        (f) =>
-          new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(String(reader.result));
-            reader.onerror = reject;
-            reader.readAsDataURL(f);
-          }),
-      ),
-    );
-    setUserImages(dataUrls);
   }
 
   async function onSubmit(e: FormEvent) {
@@ -59,11 +55,20 @@ export function GeneratorForm() {
     setPreviewUrl(null);
     setStatus("running");
 
+    // Build the slot array in the canonical SLOTS order so the prompt
+    // always gets hero first, then products, then interior, etc.
+    const imageSlots = SLOTS.filter((s) => slots[s.id]).map((s) => ({
+      slotId: s.id,
+      url: slots[s.id]!.url,
+      promptRole: s.promptRole,
+      label: s.label,
+    }));
+
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, userImages }),
+        body: JSON.stringify({ ...form, imageSlots }),
       });
 
       const data = await res.json();
@@ -125,7 +130,7 @@ export function GeneratorForm() {
                   🆓 免費版
                 </p>
                 <ul className="mt-2 space-y-1 text-xs text-[var(--color-muted-foreground)]">
-                  <li>• 每個帳號 <strong>終身 1 次</strong> 免費生成</li>
+                  <li>• 每個帳號 <strong>終身 2 次</strong> 免費生成</li>
                   <li>• 預覽網頁 <strong>24 小時後自動消失</strong></li>
                   <li>• 成品會有 5888 浮水印</li>
                   <li>• 不可下載 / 不可部署</li>
@@ -144,8 +149,8 @@ export function GeneratorForm() {
               </div>
             </div>
             <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">
-              ⚠️ 生成前請務必確認店名、類別、圖片都正確;免費版只有 1 次機會,
-              生成後請 <strong>仔細檢查預覽</strong>(尤其是圖片有沒有破掉),
+              ⚠️ 生成前請務必確認店名、類別、圖片都正確;免費版只有 <strong>2 次</strong> 機會,
+              生成後請 <strong>仔細檢查預覽</strong>,
               確認無誤再付款解鎖。付款後無法退款。
             </p>
           </div>
@@ -158,7 +163,7 @@ export function GeneratorForm() {
           required
           value={form.storeName}
           onChange={onChange}
-          placeholder="例:花蓮瓊瑤打字行"
+          placeholder="例:幸福瓢蟲手作雜貨"
           className="input"
           aria-label="店家名稱"
         />
@@ -234,21 +239,7 @@ export function GeneratorForm() {
         </select>
       </Field>
 
-      <Field label="自訂圖片(選填,可多選)">
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={onFiles}
-          className="input"
-          aria-label="上傳自訂圖片"
-        />
-        {userImages.length > 0 && (
-          <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-            已選 {userImages.length} 張
-          </p>
-        )}
-      </Field>
+      <ImageSlotGrid value={slots} onChange={setSlots} />
 
       {error && status !== "error" && (
         <div
@@ -267,9 +258,16 @@ export function GeneratorForm() {
       />
 
       <div className="md:col-span-2 flex flex-wrap items-center justify-end gap-3 pt-2">
+        {!canSubmit && !loading && (
+          <p className="text-xs text-[var(--color-muted-foreground)]">
+            {form.storeName.trim().length === 0
+              ? "請先填寫店家名稱"
+              : `還需上傳 ${MIN_REQUIRED_SLOTS - requiredSlotsFilled} 張必填照片`}
+          </p>
+        )}
         <button
           type="submit"
-          disabled={loading || !form.storeName}
+          disabled={!canSubmit}
           className="rounded-full bg-[var(--color-primary)] px-8 py-3 text-base font-semibold text-[var(--color-primary-foreground)] shadow-lg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="開始生成網站"
         >
