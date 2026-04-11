@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth, getUserKey, getWalletUid } from "@/lib/auth";
 import { redis } from "@/lib/redis";
 import { buildOrderParams, getEcpayEndpoint, PRICING } from "@/lib/ecpay";
-import { getBalance, spend, WalletError } from "@/lib/wallet";
+import { getBalance, spend, WalletError, WALLET_SITE_ID } from "@/lib/wallet";
 import { promoteSiteToPaid } from "@/lib/sitePaid";
 
 export const runtime = "nodejs";
@@ -134,7 +134,10 @@ export async function POST(req: Request) {
 
     // Idempotency key — siteId is unique per generation, so retries
     // (bad network, double-click) are de-duplicated by the wallet.
-    const idempotencyKey = `cteater_${siteId}`;
+    // Wallet scopes keys by (uid, key), but we namespace with WALLET_SITE_ID
+    // defensively so dev/prod environments can't collide on the same siteId.
+    // (Recommended by wallet dev 2026-04-11.)
+    const idempotencyKey = `cteater_${WALLET_SITE_ID}_${siteId}`;
     try {
       const spendRes = await spend({
         uid: walletUid,

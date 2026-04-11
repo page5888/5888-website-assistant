@@ -26,7 +26,7 @@ const WALLET_API_URL =
   process.env.WALLET_API_URL ?? "https://asia-east1-wallet-5888.cloudfunctions.net";
 const WALLET_API_KEY = process.env.WALLET_API_KEY ?? "";
 const WALLET_HMAC_SECRET = process.env.WALLET_HMAC_SECRET ?? "";
-const WALLET_SITE_ID = process.env.WALLET_SITE_ID ?? "5888_cteater_test";
+export const WALLET_SITE_ID = process.env.WALLET_SITE_ID ?? "5888_cteater_test";
 
 /** True when real wallet credentials are configured. */
 export function isWalletLive(): boolean {
@@ -75,6 +75,13 @@ export interface SpendResponse {
   txId: string;
   balanceAfter: number;
   tier?: "first" | "repeat";
+  /**
+   * True if this was the user's first purchase on any 5888 site
+   * (drives L1=50% / L2=25% commission rates on the wallet side).
+   * Wallet server returns this on both fresh and duplicate replays so
+   * cteater can display / log a consistent value. Added 2026-04-11.
+   */
+  isFirstPurchase?: boolean;
   metadata?: Record<string, unknown>;
 }
 
@@ -118,8 +125,9 @@ export interface GrantResponse {
  * callers can switch on it directly.
  *
  * Known codes:
- *   INSUFFICIENT_BALANCE  → HTTP 409  (spend)
- *   ACCOUNT_NOT_ACTIVE    → HTTP 403  (spend) — .status = "frozen" | "banned"
+ *   INSUFFICIENT_BALANCE  → HTTP 402  (spend) — confirmed with wallet dev 2026-04-11
+ *   ACCOUNT_NOT_ACTIVE    → HTTP 403  (spend) — .status is "frozen" in practice;
+ *                                               "banned" has no code path on wallet side
  *   USER_NOT_FOUND        → HTTP 404  (spend/getBalance)
  *   INVALID_SIGNATURE     → HTTP 401  (all)
  *   EXPIRED_TIMESTAMP     → HTTP 401  (all)
@@ -299,6 +307,7 @@ export async function spend(req: SpendRequest): Promise<SpendResponse> {
       txId: `stub_tx_${Date.now()}`,
       balanceAfter: 0,
       tier: "first",
+      isFirstPurchase: true,
     };
   }
   // ?lite=1 — skip the commissions payload. cteater UI doesn't display
