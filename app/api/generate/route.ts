@@ -6,12 +6,26 @@ import {
   dailyLimit,
   ipDailyLimit,
   LIFETIME_FREE_KEY,
+  LIFETIME_FREE_LIMIT,
   TTL,
 } from "@/lib/ratelimit";
 import { redis } from "@/lib/redis";
 import { generateSiteHtml, type ClaudeModelChoice } from "@/lib/anthropic";
-import { collectImages } from "@/lib/images/collect";
 import { injectWatermark } from "@/lib/watermark";
+import { SLOTS, MIN_REQUIRED_SLOTS, getSlot, type SlotId } from "@/lib/imageSlots";
+import { recordUserSite } from "@/lib/userSites";
+
+const VALID_SLOT_IDS = SLOTS.map((s) => s.id) as [SlotId, ...SlotId[]];
+
+const ImageSlotSchema = z.object({
+  slotId: z.enum(VALID_SLOT_IDS),
+  url: z.string().url(),
+  // promptRole / label are optional from the client — we look them up
+  // from SLOTS anyway to prevent the client from smuggling arbitrary
+  // text into the system prompt.
+  promptRole: z.string().optional(),
+  label: z.string().optional(),
+});
 
 const BodySchema = z.object({
   storeName: z.string().min(1).max(100),
@@ -21,7 +35,10 @@ const BodySchema = z.object({
   address: z.string().max(200).optional(),
   phone: z.string().max(30).optional(),
   model: z.enum(["sonnet", "opus"]).default("sonnet"),
-  userImages: z.array(z.string()).max(10).optional(),
+  imageSlots: z
+    .array(ImageSlotSchema)
+    .min(MIN_REQUIRED_SLOTS, `至少需要 ${MIN_REQUIRED_SLOTS} 張必填照片`)
+    .max(10),
 });
 
 export const runtime = "nodejs";
@@ -54,11 +71,10 @@ export async function POST(req: Request) {
   //    We use a plain counter so we can increment only on success.
   if (hasRedis) {
     const used = (await redis.get<number>(LIFETIME_FREE_KEY(userKey))) ?? 0;
-    if (used >= 1) {
+    if (used >= LIFETIME_FREE_LIMIT) {
       return NextResponse.json(
         {
-          error:
-            "您的免費生成次數已用完。升級為完整版(NT$490)即可解鎖永久保留、下載與部署。",
+          error: `您的免費生成次數(${LIFETIME_FREE_LIMIT} 次)已用完。升級為完整版(NT$490)即可解鎖永久保留、下載與部署。`,
           code: "lifetime_quota_exceeded",
         },
         { status: 402 },
@@ -100,14 +116,19 @@ export async function POST(req: Request) {
     );
   }
 
-  // 6. Collect images (parallel-friendly, falls back gracefully)
-  const { images, sources } = await collectImages({
-    userImages: input.userImages,
-    fbUrl: input.fbUrl || undefined,
-    industryHint: input.industryHint || input.storeName,
-    storeName: input.storeName,
-    target: 8,
+  // 6. Resolve slot metadata server-side from the canonical SLOTS config.
+  //    The client sends { slotId, url }; we look up label/promptRole
+  //    ourselves so the prompt can't be polluted by client-supplied text.
+  const imageSlots = input.imageSlots.map((s) => {
+    const def = getSlot(s.slotId);
+    return {
+      slotId: s.slotId,
+      url: s.url,
+      label: def.label,
+      promptRole: def.promptRole,
+    };
   });
+  const sources = [`slots:${imageSlots.length}`];
 
   // 7. Call Claude
   let rawHtml: string;
@@ -119,7 +140,7 @@ export async function POST(req: Request) {
       industryHint: input.industryHint,
       address: input.address,
       phone: input.phone,
-      images,
+      imageSlots,
       model: input.model as ClaudeModelChoice,
     });
   } catch (err) {
@@ -168,6 +189,10 @@ export async function POST(req: Request) {
       }),
       { ex: TTL.FREE_SITE },
     );
+    // Index this site under the user so the landing page can surface
+    // "你有一個免費預覽還在 X 小時內" without the user needing to
+    // remember the random URL.
+    await recordUserSite(userKey, siteId);
   }
 
   return NextResponse.json({

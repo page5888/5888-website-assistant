@@ -1,9 +1,18 @@
 import Link from "next/link";
-import { auth, signIn, signOut } from "@/lib/auth";
+import { auth, signIn, getUserKey } from "@/lib/auth";
 import { GeneratorForm } from "@/components/GeneratorForm";
+import { AccountChip } from "@/components/AccountChip";
+import { getActiveUserSites } from "@/lib/userSites";
 
 export default async function HomePage() {
   const session = await auth();
+
+  // If the user is logged in, surface any sites they generated recently
+  // so they can jump straight back to the preview without remembering
+  // the random siteId URL. Handles both in-progress free previews
+  // (countdown) and already-paid sites.
+  const userKey = getUserKey(session);
+  const recentSites = userKey ? await getActiveUserSites(userKey) : [];
 
   return (
     <main className="flex min-h-screen flex-col">
@@ -18,44 +27,73 @@ export default async function HomePage() {
             <span className="text-gradient">5888</span>
             <span>網站助手</span>
           </Link>
-          <nav aria-label="帳號">
-            {session?.user ? (
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
-                <span className="mr-4 text-sm text-[var(--color-muted-foreground)]">
-                  {session.user.name ?? session.user.email}
-                </span>
-                <button
-                  type="submit"
-                  className="rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-medium transition hover:bg-[var(--color-muted)]"
-                  aria-label="登出"
-                >
-                  登出
-                </button>
-              </form>
-            ) : (
-              <form
-                action={async () => {
-                  "use server";
-                  await signIn("google", { redirectTo: "/" });
-                }}
-              >
-                <button
-                  type="submit"
-                  className="rounded-full bg-[var(--color-foreground)] px-5 py-2 text-sm font-semibold text-[var(--color-background)] shadow-lg shadow-[var(--color-primary)]/10 transition hover:scale-105"
-                  aria-label="使用 Google 登入"
-                >
-                  以 Google 登入 →
-                </button>
-              </form>
-            )}
+          <nav aria-label="主選單" className="flex items-center gap-5 text-sm">
+            <Link
+              href="/pricing"
+              className="hidden sm:inline hover:text-[var(--color-primary)]"
+            >
+              定價
+            </Link>
+            <Link
+              href="/changelog"
+              className="hidden sm:inline hover:text-[var(--color-primary)]"
+            >
+              更新紀錄
+            </Link>
+            <AccountChip />
           </nav>
         </div>
       </header>
+
+      {/* ============ RECENT SITES BANNER ============ */}
+      {recentSites.length > 0 && (
+        <section
+          aria-label="你最近生成的網站"
+          className="border-b border-[var(--color-border)]/60 bg-gradient-to-r from-[var(--color-primary)]/10 via-white to-[var(--color-accent)]/10"
+        >
+          <div className="mx-auto max-w-7xl px-6 py-4">
+            <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-[var(--color-primary)]">
+              📂 你最近生成的網站
+            </p>
+            <ul className="flex flex-wrap gap-2">
+              {recentSites.map((s) => {
+                const hoursLeft =
+                  !s.paid && s.expiresAt
+                    ? Math.max(
+                        0,
+                        Math.ceil((s.expiresAt - Date.now()) / (60 * 60 * 1000)),
+                      )
+                    : null;
+                return (
+                  <li key={s.siteId}>
+                    <Link
+                      href={`/preview/${s.siteId}`}
+                      className="group inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-white px-4 py-2 text-sm shadow-sm transition hover:border-[var(--color-primary)] hover:shadow-md"
+                      aria-label={`回到預覽 ${s.storeName}`}
+                    >
+                      <span className="font-semibold text-[var(--color-foreground)]">
+                        {s.storeName}
+                      </span>
+                      {s.paid ? (
+                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-bold text-green-800">
+                          ✨ 已付款
+                        </span>
+                      ) : hoursLeft !== null ? (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800">
+                          ⏰ {hoursLeft}h 後消失
+                        </span>
+                      ) : null}
+                      <span className="text-[var(--color-primary)] transition group-hover:translate-x-0.5">
+                        →
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* ============ HERO ============ */}
       <section
@@ -80,14 +118,14 @@ export default async function HomePage() {
               id="hero-title"
               className="text-5xl font-black leading-[1.05] tracking-tight md:text-7xl"
             >
-              30 秒生成
+              用你的照片
               <br />
-              <span className="text-gradient">店家級</span>官網
+              生成<span className="text-gradient">店家級</span>官網
               <br />
               <span className="text-[var(--color-foreground)]/60">不用寫 code</span>
             </h1>
             <p className="max-w-xl text-lg leading-relaxed text-[var(--color-foreground)]/75">
-              填入店名、地標或粉專連結,AI 會依照嚴謹的五大設計思維,
+              上傳 3-10 張店家照片 + 填入店名,AI 會依照嚴謹的五大設計思維,
               為你產出可立刻上線的
               <strong className="text-[var(--color-foreground)]"> index.html</strong>。
               內建 SEO / AEO / GEO 所有要素,讓你的店家在 Google、ChatGPT、Perplexity 都找得到。
@@ -128,7 +166,7 @@ export default async function HomePage() {
               </a>
             </div>
             <p className="text-xs text-[var(--color-muted-foreground)]">
-              ✦ 終身 1 次免費 ✦ 24 小時預覽 ✦ NT$490 解鎖永久保留 + 下載 + GitHub 部署
+              ✦ 終身 2 次免費 ✦ 24 小時預覽 ✦ NT$490 解鎖永久保留 + 下載 + GitHub 部署
             </p>
           </div>
 
@@ -209,7 +247,7 @@ export default async function HomePage() {
             <div className="rounded-3xl border-2 border-dashed border-[var(--color-primary)]/30 bg-white/60 p-16 text-center backdrop-blur">
               <p className="text-3xl font-black">請先登入才能開始生成 🎨</p>
               <p className="mt-4 text-base text-[var(--color-muted-foreground)]">
-                我們使用 Google 登入來防止濫用 · 每個帳號終身 1 次免費生成
+                我們使用 Google 登入來防止濫用 · 每個帳號終身 2 次免費生成
               </p>
             </div>
           )}
@@ -222,7 +260,7 @@ export default async function HomePage() {
           <span className="font-bold text-[var(--color-background)]">
             5888 網站助手
           </span>{" "}
-          ｜ 2026 Design by 花蓮瓊瑤打字行
+          ｜ 2026 Design by 幸福瓢蟲手作雜貨
         </p>
         <p className="mt-2 text-xs text-[var(--color-background)]/40">
           Powered by Claude 4.6 · Next.js · Vercel · GitHub Pages

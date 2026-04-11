@@ -2,7 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { redis } from "@/lib/redis";
 import { auth } from "@/lib/auth";
+import { getBalance } from "@/lib/wallet";
+import { PRICING } from "@/lib/ecpay";
 import { PreviewActions } from "@/components/PreviewActions";
+import { AccountChip } from "@/components/AccountChip";
+import { extractImageSlots } from "@/lib/siteImages";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -51,10 +55,30 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
     hoursLeft = Math.max(0, Math.ceil(ms / (60 * 60 * 1000)));
   }
 
+  // Fetch the user's 5888 central wallet balance so the checkout UI can
+  // offer points-as-discount. In stub mode (no WALLET_API_KEY) this returns
+  // 0 and the slider is hidden — see lib/wallet.ts.
+  let walletBalance = 0;
+  const walletUid = (session.user as { walletUid?: string }).walletUid;
+  if (!isPaid && walletUid) {
+    try {
+      const res = await getBalance(walletUid);
+      walletBalance = res.balance;
+    } catch (err) {
+      // Balance display is best-effort — don't block the preview page on it.
+      console.error("[preview] getBalance failed", err);
+    }
+  }
+
+  // For paid sites, parse out the image slots so the post-payment UI can
+  // offer per-slot image replacement. We only do this after payment to
+  // keep the free-preview render path cheap.
+  const imageSlots = isPaid ? extractImageSlots(html) : [];
+
   return (
     <main className="flex min-h-screen flex-col">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b bg-white/90 px-6 py-4 backdrop-blur">
-        <div>
+        <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/"
             className="text-xl font-black"
@@ -63,21 +87,32 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
             <span className="text-[var(--color-primary)]">5888</span>
             <span className="ml-1">網站助手</span>
           </Link>
-          <span className="ml-3 text-sm text-[var(--color-muted-foreground)]">
+          <span className="truncate text-sm text-[var(--color-muted-foreground)]">
             預覽:{meta.storeName}
           </span>
           {!isPaid && hoursLeft !== null && (
-            <span className="ml-3 inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+            <span className="inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
               ⏰ {hoursLeft} 小時後消失
             </span>
           )}
           {isPaid && (
-            <span className="ml-3 inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
+            <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
               ✨ 已永久保留
             </span>
           )}
         </div>
-        <PreviewActions siteId={id} initialPaid={isPaid} />
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <PreviewActions
+            siteId={id}
+            initialPaid={isPaid}
+            price={PRICING.FULL_UNLOCK_TWD}
+            balance={walletBalance}
+            images={imageSlots}
+          />
+          <div className="border-l border-[var(--color-border)] pl-3">
+            <AccountChip variant="compact" />
+          </div>
+        </div>
       </header>
 
       <div className="flex-1 bg-[var(--color-muted)] p-4">
@@ -91,8 +126,12 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
         </div>
       </div>
 
-      <footer className="border-t bg-white px-6 py-3 text-center text-xs text-[var(--color-muted-foreground)]">
-        5888 網站助手 ｜ 2026 Design by 花蓮瓊瑤打字行
+      <footer className="flex flex-wrap items-center justify-center gap-4 border-t bg-white px-6 py-3 text-center text-xs text-[var(--color-muted-foreground)]">
+        <span>5888 網站助手 ｜ 2026 Design by 幸福瓢蟲手作雜貨</span>
+        <span aria-hidden>·</span>
+        <Link href="/changelog" className="hover:text-[var(--color-primary)]">
+          更新紀錄
+        </Link>
       </footer>
     </main>
   );
