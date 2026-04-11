@@ -1,5 +1,12 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 import { NextResponse } from "next/server";
+
+// Middleware runs on the edge runtime, so we construct a slim NextAuth
+// instance from the edge-safe config (no wallet / node:crypto imports).
+// The full config with the wallet jwt callback lives in lib/auth.ts and
+// is used by API routes / server components.
+const { auth } = NextAuth(authConfig);
 
 /**
  * Routes that require an authenticated user.
@@ -16,6 +23,7 @@ export default auth((req) => {
     req.nextUrl.pathname.startsWith("/api/pay") ||
     req.nextUrl.pathname.startsWith("/api/deploy") ||
     req.nextUrl.pathname.startsWith("/api/download") ||
+    req.nextUrl.pathname.startsWith("/api/upload-image") ||
     req.nextUrl.pathname.startsWith("/api/admin");
 
   if (isProtected && !req.auth) {
@@ -32,6 +40,7 @@ export const config = {
     "/api/pay/:path*",
     "/api/deploy/:path*",
     "/api/download/:path*",
+    "/api/upload-image/:path*",
     "/api/admin/:path*",
   ],
 };

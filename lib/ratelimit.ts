@@ -50,11 +50,19 @@ export const TTL = {
 } as const;
 
 /**
- * Lifetime free-generation counter key (1 free generation ever,
- * per account). Stored as a plain Redis counter, no TTL.
+ * Lifetime free-generation counter key. Stored as a plain Redis counter
+ * with no TTL — once a user has used up their quota, they stay capped
+ * forever (until they pay).
+ *
+ * The limit used to be 1, but was bumped to 2 so users who bump into
+ * broken images / wrong-style output on their first attempt have a
+ * retry buffer before being forced to pay.
  */
 export const LIFETIME_FREE_KEY = (userKey: string) =>
   `web-cteater:lifetime-free:${userKey}`;
+
+/** How many free generations each account gets, lifetime. */
+export const LIFETIME_FREE_LIMIT = 2;
 
 /**
  * Lifetime paid flag (once paid for this siteId, this key is set
