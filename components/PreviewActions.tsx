@@ -200,6 +200,13 @@ export function PreviewActions({
           <span className="hidden text-xs font-semibold text-green-700 sm:inline">
             ✨ 已解鎖完整版
           </span>
+          <a
+            href={`/preview/${encodeURIComponent(siteId)}/edit`}
+            className="rounded-full border-2 border-[var(--color-primary)]/70 px-4 py-2 text-sm font-semibold text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-foreground)]"
+            aria-label="修改網站文字內容"
+          >
+            ✏️ 修改文字
+          </a>
           {images.length > 0 && (
             <button
               type="button"
@@ -318,7 +325,7 @@ function HelpModal({ paid, onClose }: { paid: boolean; onClose: () => void }) {
               <li>• 同時填寫「地址」與「Google Maps 連結」會讓 AI 理解地區氛圍</li>
               {paid && (
                 <li>
-                  • <strong>完整版用戶</strong>:可以用 30 次修改額度調整內容(尚未開放,即將推出)
+                  • <strong>完整版用戶</strong>:點上方的「✏️ 修改文字」可逐段調整內容,每個網站最多 30 次
                 </li>
               )}
             </ul>

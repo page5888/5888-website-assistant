@@ -4,7 +4,7 @@ import { EcosystemFooter } from "@/components/EcosystemFooter";
 export const metadata = {
   title: "定價 | 5888 網站助手",
   description:
-    "免費試用 2 次,完整版一次付費 NT$490 永久保留、30 次修改、自動部署到 GitHub。",
+    "免費試用 2 次,完整版一次付費 NT$490 永久保留、逐段改文字、逐張換圖、自動部署到 GitHub。",
 };
 
 const FREE_FEATURES = [
@@ -14,16 +14,16 @@ const FREE_FEATURES = [
   { text: "永久保留", ok: false },
   { text: "下載 HTML 原始檔", ok: false },
   { text: "一鍵部署到 GitHub", ok: false },
-  { text: "30 次內容修改", ok: false },
+  { text: "付款後改文字 / 換圖片", ok: false },
 ];
 
 const PAID_FEATURES = [
-  { text: "♾️ 付費後可重新生成 + 逐張換圖", ok: true },
-  { text: "♾️ 永久保留", ok: true },
+  { text: "♾️ 永久保留,沒有時效", ok: true },
   { text: "✨ 移除浮水印", ok: true },
   { text: "⬇️ 下載 HTML 原始檔", ok: true },
   { text: "🚀 一鍵部署到 GitHub Pages", ok: true },
-  { text: "✏️ 30 次內容修改(每日 1 次)", ok: true },
+  { text: "✏️ 逐段修改文字(每個網站最多 30 次)", ok: true },
+  { text: "🖼️ 逐張替換圖片(版位固定為生成時上傳的張數)", ok: true },
   { text: "💎 終身客服與更新", ok: true },
 ];
 
@@ -157,10 +157,22 @@ export default function PricingPage() {
           </details>
           <details className="group rounded-2xl border border-[var(--color-border)] bg-white p-5">
             <summary className="cursor-pointer font-semibold">
-              可以修改幾次?超過怎麼辦?
+              付款後可以改哪些東西?改幾次?
             </summary>
             <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">
-              付費版提供 30 次內容修改(每日最多 1 次)。30 次用完可以額外加購。正常店家改個 3~5 次就定稿了,30 次綽綽有餘。
+              付款解鎖後,你可以:<br />
+              1) <strong>逐段修改文字</strong> — 標題、副標、段落、商品說明都能直接改,每個網站最多 30 次(不限每日)<br />
+              2) <strong>逐張替換圖片</strong> — 上傳新照片,系統會自動裁切到對的比例<br />
+              <br />
+              ⚠️ <strong>圖片版位固定為生成時上傳的張數。</strong>例如生成時只上傳 3 張,事後只能替換這 3 張,無法增加新的版位。建議生成前盡量多上傳幾張。
+            </p>
+          </details>
+          <details className="group rounded-2xl border border-[var(--color-border)] bg-white p-5">
+            <summary className="cursor-pointer font-semibold">
+              30 次文字修改不夠用怎麼辦?
+            </summary>
+            <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">
+              正常店家改個 3~5 次就定稿了,30 次綽綽有餘。如果真的用完,請寫信告訴我們你的使用情境,我們會協助處理。
             </p>
           </details>
           <details className="group rounded-2xl border border-[var(--color-border)] bg-white p-5">

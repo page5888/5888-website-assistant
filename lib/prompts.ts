@@ -280,6 +280,37 @@ Hero 必須符合以下任一種結構(挑一種,不要每次都做一樣的):
 **如果某個 section 你想不到「為什麼它非存在不可」,就刪掉它。**
 網站不是越多內容越好。一個只有 5 個 section 但每個都很強的網站,勝過 10 個 section 但都很平均的網站。
 
+【文字編輯標記 — 強制規範】
+付費使用者可以在事後逐段修改網站上的文字,為了讓系統能正確找到每一段可編輯的文字,你**必須**在以下元素上加入 \`data-5888-text="<唯一鍵>"\` 屬性:
+
+- Hero 的 H1 → \`data-5888-text="hero.title"\`
+- Hero 的副標 / tagline → \`data-5888-text="hero.subtitle"\`(如果沒有副標就不用加)
+- Hero 區塊內的 meta 文字(地址、電話、營業時間等) → \`data-5888-text="hero.meta"\`(如果有)
+- 每個 section 的主標題 H2 → \`data-5888-text="section.<slug>.title"\`,例如 \`section.about.title\` / \`section.services.title\` / \`section.faq.title\`
+- 每個 section 的副標或導言 → \`data-5888-text="section.<slug>.lead"\`
+- 品牌故事 / About 區塊的主要段落(每段一個) → \`data-5888-text="about.body.1"\`, \`about.body.2\` ...
+- 每個商品卡片的名稱 → \`data-5888-text="service.<n>.title"\`(n 為 1, 2, 3...)
+- 每個商品卡片的描述 → \`data-5888-text="service.<n>.desc"\`
+- 每個 FAQ 的問題與答案 → \`data-5888-text="faq.<n>.q"\` / \`faq.<n>.a"\`
+- 聯絡資訊的各欄位(地址 / 電話 / 營業時間) → \`data-5888-text="contact.address"\` / \`contact.phone"\` / \`contact.hours"\`
+- 強制 footer 那一行「<店名> ｜ 2026 Design by 幸福瓢蟲手作雜貨」 → **不要**加 data-5888-text(這行不可編輯)
+
+規則:
+- 每個 key 在整個頁面中**必須唯一**。
+- key 使用小寫英文、點號分段。不可出現中文、空白、特殊符號。
+- 屬性只加在**文字元素**上(H1/H2/H3/H4、p、li、span、blockquote、q、dt、dd、figcaption、time),不要加在 div/section/nav/header/footer 等容器上。
+- 同一個元素內**不可**再有子元素也帶 data-5888-text(巢狀會讓編輯器混亂)。
+- 主要的可見文案(標題、副標、段落、商品說明、FAQ、聯絡資訊)都應該要有這個屬性 — 沒標記的文字使用者就改不到。
+- 純裝飾性或重複出現的文字(頁首導覽連結、CTA 按鈕「立即聯絡」等)可以不標。
+
+範例:
+    <h1 data-5888-text="hero.title">我們只烤老派的麵包</h1>
+    <p data-5888-text="hero.subtitle">因為新派的太吵了</p>
+    <h2 data-5888-text="section.about.title">關於這家店</h2>
+    <p data-5888-text="about.body.1">這間店 2019 年從一個爐子開始,現在變成三個爐子。</p>
+    <h3 data-5888-text="service.1.title">鄉村法棍</h3>
+    <p data-5888-text="service.1.desc">每天早上 10 點出爐,賣完就沒有,45 元。</p>
+
 【強制 Footer — 絕對不可省略】
 網頁 <body> 最底部的 <footer> 區塊**必須**包含以下一行文字(完全一致,不要改字、不要翻譯):
 
@@ -312,7 +343,7 @@ Hero 必須符合以下任一種結構(挑一種,不要每次都做一樣的):
 - **絕對不要**在 HTML 前後加任何說明、前言、後記文字。
 - **絕對不要**自行編造圖片 URL,只能使用 user message 提供的那幾張。
 - 回應全部以繁體中文撰寫(包含標題、文案、meta)。
-- 再次提醒:最底部 footer **必定**要有「幸福瓢蟲手作雜貨」這八個字,每張 <img> **必定**要有 data-5888-slot 屬性。`;
+- 再次提醒:最底部 footer **必定**要有「幸福瓢蟲手作雜貨」這八個字,每張 <img> **必定**要有 data-5888-slot 屬性,每個主要文字元素 **必定** 要有 data-5888-text 屬性(key 全小寫英文點號分段、全頁唯一)。`;
 
 /**
  * A single uploaded image tied to a named slot. All fields are required —

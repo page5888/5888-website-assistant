@@ -143,7 +143,8 @@ export function GeneratorForm() {
                 <ul className="mt-2 space-y-1 text-xs text-[var(--color-muted-foreground)]">
                   <li>• 移除浮水印 · <strong>永久保留</strong></li>
                   <li>• 下載 index.html / 一鍵部署 GitHub Pages</li>
-                  <li>• 可使用 <strong>30 次</strong> 修改(每天 1 次)</li>
+                  <li>• 可 <strong>逐段修改文字</strong>(最多 30 次)</li>
+                  <li>• 可 <strong>逐張替換圖片</strong>(版位數 = 生成時上傳張數)</li>
                   <li>• 想做第二個網站需再付一次 NT$490</li>
                 </ul>
               </div>
@@ -152,6 +153,9 @@ export function GeneratorForm() {
               ⚠️ 生成前請務必確認店名、類別、圖片都正確;免費版只有 <strong>2 次</strong> 機會,
               生成後請 <strong>仔細檢查預覽</strong>,
               確認無誤再付款解鎖。付款後無法退款。
+            </p>
+            <p className="mt-2 text-xs text-amber-700">
+              📸 <strong>圖片版位一次定型</strong> — 你現在上傳幾張,生成後可替換的也是幾張,<strong>事後無法增加新版位</strong>,請盡量上傳完整一點。
             </p>
           </div>
         </div>
