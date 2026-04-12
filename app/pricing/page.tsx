@@ -24,6 +24,7 @@ const PAID_FEATURES = [
   { text: "🚀 一鍵部署到 GitHub Pages", ok: true },
   { text: "✏️ 逐段修改文字(每個網站最多 30 次)", ok: true },
   { text: "🖼️ 逐張替換圖片(版位固定為生成時上傳的張數)", ok: true },
+  { text: "🤖 AI 圖片生成(每張 10 點,用 5888 點數扣)", ok: true },
   { text: "💎 終身客服與更新", ok: true },
 ];
 

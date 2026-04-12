@@ -27,16 +27,22 @@ export interface ImageSlotRow {
 export function ImageReplaceModal({
   siteId,
   initialImages,
+  balance,
   onClose,
 }: {
   siteId: string;
   initialImages: ImageSlotRow[];
+  /** Current wallet balance — used to show if user can afford AI gen. */
+  balance: number;
   onClose: () => void;
 }) {
   const [rows, setRows] = useState<ImageSlotRow[]>(initialImages);
   const [busySlot, setBusySlot] = useState<SlotId | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
+  /** Which slot has the AI prompt input open */
+  const [aiSlot, setAiSlot] = useState<SlotId | null>(null);
+  const [aiPrompt, setAiPrompt] = useState("");
 
   async function handleFile(slotId: SlotId, file: File) {
     setBusySlot(slotId);
@@ -98,6 +104,52 @@ export function ImageReplaceModal({
     }
   }
 
+  async function handleAiGen(slotId: SlotId) {
+    if (!aiPrompt.trim()) return;
+    setBusySlot(slotId);
+    setError(null);
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId, slotId, prompt: aiPrompt.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `生成失敗 (${res.status})`);
+      }
+      const newUrl = data.url as string;
+
+      setRows((prev) =>
+        prev.map((r) => (r.slotId === slotId ? { ...r, currentUrl: newUrl } : r)),
+      );
+      setTouched(true);
+      setAiSlot(null);
+      setAiPrompt("");
+
+      // Try to update live iframe
+      try {
+        const iframe = document.querySelector("iframe") as HTMLIFrameElement | null;
+        const doc = iframe?.contentDocument;
+        if (doc) {
+          const imgs = doc.querySelectorAll<HTMLImageElement>(
+            `img[data-5888-slot="${slotId}"]`,
+          );
+          imgs.forEach((img) => {
+            img.removeAttribute("srcset");
+            img.src = newUrl;
+          });
+        }
+      } catch {
+        // ignore
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusySlot(null);
+    }
+  }
+
   function handleClose() {
     if (touched) {
       // Reload so the server-rendered srcDoc matches the new Redis state
@@ -128,7 +180,7 @@ export function ImageReplaceModal({
               更換網站圖片
             </h2>
             <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-              點選任一張圖片的「換圖」,上傳新照片即可立即替換。系統會自動依照正確比例裁切。
+              📁 換圖:上傳自己的照片。🤖 AI 生成:輸入描述讓 AI 畫一張(每張 10 點)。
             </p>
           </div>
           <button
@@ -164,7 +216,7 @@ export function ImageReplaceModal({
               return (
                 <li
                   key={row.slotId}
-                  className="flex items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-white p-3"
+                  className="flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-white p-3"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -180,24 +232,68 @@ export function ImageReplaceModal({
                       {hint}
                     </p>
                   </div>
-                  <label
-                    className={`inline-flex cursor-pointer items-center justify-center rounded-full border border-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-foreground)] ${
-                      busy ? "pointer-events-none opacity-50" : ""
-                    }`}
-                  >
-                    {busy ? "處理中…" : "換圖"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
+                  <div className="flex flex-shrink-0 flex-col gap-1">
+                    <label
+                      className={`inline-flex cursor-pointer items-center justify-center rounded-full border border-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-foreground)] ${
+                        busy ? "pointer-events-none opacity-50" : ""
+                      }`}
+                    >
+                      {busy ? "處理中…" : "📁 換圖"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={busy}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleFile(row.slotId, f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
                       disabled={busy}
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleFile(row.slotId, f);
-                        e.target.value = ""; // allow re-selecting same file
+                      onClick={() => {
+                        setAiSlot(aiSlot === row.slotId ? null : row.slotId);
+                        setAiPrompt("");
                       }}
-                    />
-                  </label>
+                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                        aiSlot === row.slotId
+                          ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-white"
+                          : "border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white"
+                      } ${busy ? "pointer-events-none opacity-50" : ""}`}
+                    >
+                      🤖 AI 生成
+                    </button>
+                  </div>
+                  {aiSlot === row.slotId && (
+                    <div className="col-span-full mt-2 flex w-full gap-2 rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-3">
+                      <input
+                        type="text"
+                        placeholder="描述你要的圖片,例:手沖咖啡特寫,溫暖色調"
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        maxLength={500}
+                        disabled={busy}
+                        className="min-w-0 flex-1 rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-xs focus:border-[var(--color-accent)] focus:outline-none"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleAiGen(row.slotId);
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        disabled={busy || !aiPrompt.trim()}
+                        onClick={() => handleAiGen(row.slotId)}
+                        className="flex-shrink-0 rounded-full bg-[var(--color-accent)] px-4 py-2 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                      >
+                        {busy ? "生成中…" : `生成 (${10} 點)`}
+                      </button>
+                    </div>
+                  )}
                 </li>
               );
             })}
@@ -206,7 +302,7 @@ export function ImageReplaceModal({
 
         <div className="mt-6 flex items-center justify-between">
           <p className="text-[11px] text-[var(--color-muted-foreground)]">
-            ※ 每次換圖會產生一張新圖檔,舊的會保留在雲端空間,不會被刪除。
+            💰 點數餘額: <strong>{balance.toLocaleString()}</strong> 點 · AI 生成每張 10 點
           </p>
           <button
             type="button"

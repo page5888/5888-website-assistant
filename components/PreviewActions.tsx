@@ -247,6 +247,7 @@ export function PreviewActions({
         <ImageReplaceModal
           siteId={siteId}
           initialImages={images}
+          balance={balance}
           onClose={() => setReplaceOpen(false)}
         />
       )}

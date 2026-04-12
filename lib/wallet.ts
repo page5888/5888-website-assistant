@@ -26,7 +26,7 @@ const WALLET_API_URL =
   process.env.WALLET_API_URL ?? "https://asia-east1-wallet-5888.cloudfunctions.net";
 const WALLET_API_KEY = process.env.WALLET_API_KEY ?? "";
 const WALLET_HMAC_SECRET = process.env.WALLET_HMAC_SECRET ?? "";
-export const WALLET_SITE_ID = process.env.WALLET_SITE_ID ?? "5888_cteater_test";
+export const WALLET_SITE_ID = process.env.WALLET_SITE_ID ?? "5888_cteater_staging";
 
 /** True when real wallet credentials are configured. */
 export function isWalletLive(): boolean {
