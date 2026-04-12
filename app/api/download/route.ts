@@ -44,20 +44,36 @@ export async function GET(req: Request) {
   // already removed it, this is a safety net for paid users).
   const finalHtml = stripWatermark(html);
 
+  const storeName = (meta.storeName as string) ?? "site";
+
   return new NextResponse(finalHtml, {
     status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${sanitizeFilename(
-        (meta.storeName as string) ?? "site",
-      )}.html"`,
+      "Content-Disposition": buildContentDisposition(`${storeName}.html`),
     },
   });
 }
 
-function sanitizeFilename(name: string): string {
-  return name
-    .replace(/[^\p{L}\p{N}_-]+/gu, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 50) || "site";
+/**
+ * Build a Content-Disposition header that handles non-ASCII filenames
+ * safely. HTTP headers are ByteStrings — raw Chinese (or any >U+00FF)
+ * characters throw `TypeError: Cannot convert argument to a ByteString`
+ * when passed to `new Response(..., { headers })`.
+ *
+ * RFC 6266 / RFC 5987 says: provide an ASCII-only `filename=` as a
+ * fallback, plus `filename*=UTF-8''<percent-encoded>` as the preferred
+ * value. All modern browsers honor the `filename*=` form and render the
+ * original name (e.g. "幸福瓢蟲手作雜貨.html") on the save dialog.
+ */
+function buildContentDisposition(filename: string): string {
+  const asciiFallback =
+    filename
+      // Replace anything outside basic safe ASCII with `_`, keep the dot
+      // so the extension survives.
+      .replace(/[^\x20-\x7E]+/g, "_")
+      .replace(/["\\]/g, "_")
+      .slice(0, 80) || "site.html";
+  const utf8Encoded = encodeURIComponent(filename);
+  return `attachment; filename="${asciiFallback}"; filename*=UTF-8''${utf8Encoded}`;
 }

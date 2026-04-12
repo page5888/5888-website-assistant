@@ -3,7 +3,7 @@ import { auth, signIn, getUserKey } from "@/lib/auth";
 import { GeneratorForm } from "@/components/GeneratorForm";
 import { AccountChip } from "@/components/AccountChip";
 import { EcosystemFooter } from "@/components/EcosystemFooter";
-import { getActiveUserSites } from "@/lib/userSites";
+import { getActiveUserSites, HOMEPAGE_BANNER_LIMIT } from "@/lib/userSites";
 
 export default async function HomePage() {
   const session = await auth();
@@ -13,7 +13,10 @@ export default async function HomePage() {
   // the random siteId URL. Handles both in-progress free previews
   // (countdown) and already-paid sites.
   const userKey = getUserKey(session);
-  const recentSites = userKey ? await getActiveUserSites(userKey) : [];
+  const allUserSites = userKey ? await getActiveUserSites(userKey) : [];
+  // Banner shows only the most recent few; the rest are on /my-sites.
+  const recentSites = allUserSites.slice(0, HOMEPAGE_BANNER_LIMIT);
+  const hasMore = allUserSites.length > recentSites.length;
 
   return (
     <main className="flex min-h-screen flex-col">
@@ -29,6 +32,14 @@ export default async function HomePage() {
             <span>網站助手</span>
           </Link>
           <nav aria-label="主選單" className="flex items-center gap-5 text-sm">
+            {session?.user && (
+              <Link
+                href="/my-sites"
+                className="hover:text-[var(--color-primary)]"
+              >
+                我的網站
+              </Link>
+            )}
             <Link
               href="/pricing"
               className="hidden sm:inline hover:text-[var(--color-primary)]"
@@ -53,9 +64,18 @@ export default async function HomePage() {
           className="border-b border-[var(--color-border)]/60 bg-gradient-to-r from-[var(--color-primary)]/10 via-white to-[var(--color-accent)]/10"
         >
           <div className="mx-auto max-w-7xl px-6 py-4">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-[var(--color-primary)]">
-              📂 你最近生成的網站
-            </p>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                📂 你最近生成的網站
+              </p>
+              <Link
+                href="/my-sites"
+                className="text-xs font-semibold text-[var(--color-primary)] hover:underline"
+                aria-label="查看所有你的網站"
+              >
+                {hasMore ? `查看全部 (${allUserSites.length}) →` : "查看全部 →"}
+              </Link>
+            </div>
             <ul className="flex flex-wrap gap-2">
               {recentSites.map((s) => {
                 const hoursLeft =

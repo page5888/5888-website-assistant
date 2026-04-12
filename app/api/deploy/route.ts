@@ -33,9 +33,13 @@ export async function POST(req: Request) {
 
   try {
     const result = await deployHtmlToPages(html, meta.storeName ?? "site");
-    // Cache the deploy result on meta for potential re-queries
+    // Cache the deploy result on meta for potential re-queries.
+    // IMPORTANT: paid sites are stored WITHOUT TTL (promoteSiteToPaid's
+    // invariant — they're permanent). Do NOT pass `ex` here or we'd
+    // silently demote a paid-forever site to a 1-hour TTL, which is
+    // exactly how customers' "my paid site vanished" complaints happen.
     meta.deploy = result;
-    await redis.set(`site:${siteId}:meta`, JSON.stringify(meta), { ex: 3600 });
+    await redis.set(`site:${siteId}:meta`, JSON.stringify(meta));
     return NextResponse.json(result);
   } catch (err) {
     console.error("[deploy] error", err);

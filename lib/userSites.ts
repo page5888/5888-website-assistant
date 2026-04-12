@@ -2,13 +2,17 @@
  * Per-user recent sites index.
  *
  * Small bit of metadata so a logged-in user arriving at the landing page
- * can find the site they generated earlier — otherwise they'd need to
+ * can find the sites they generated earlier — otherwise they'd need to
  * remember the random siteId URL.
  *
  * Storage: `user:{userKey}:sites` → JSON array of { siteId, createdAt },
- * newest first, capped at 5 entries. No TTL on this key itself — we rely
- * on individual `site:{siteId}:meta` keys expiring (24h for free tier)
- * as the source of truth and filter stale entries out at read time.
+ * newest first, capped at MAX_ENTRIES. No TTL on this key itself — we
+ * rely on individual `site:{siteId}:meta` keys expiring (24h for free
+ * tier) as the source of truth and filter stale entries out at read time.
+ *
+ * The homepage banner only shows the most recent few via its own slice;
+ * the full list is surfaced in /my-sites so paid customers can always
+ * find their deployed sites, not just the latest handful.
  */
 
 import { redis } from "./redis";
@@ -18,7 +22,13 @@ export interface UserSiteEntry {
   createdAt: number;
 }
 
-const MAX_ENTRIES = 5;
+// Cap the full index at 100. Paid sites never expire, so without *some*
+// cap an extremely active user's list would grow unbounded. 100 is far
+// beyond any realistic single-user usage in the current business model.
+const MAX_ENTRIES = 100;
+
+/** Homepage banner slice size — the short "recent sites" list up top. */
+export const HOMEPAGE_BANNER_LIMIT = 5;
 
 function key(userKey: string): string {
   return `user:${userKey}:sites`;
@@ -62,10 +72,18 @@ export async function recordUserSite(
  * Each returned entry includes the resolved meta fields the landing page
  * needs to render a CTA: storeName, paid flag, and optional expiry.
  */
+export interface ResolvedDeployInfo {
+  pagesUrl?: string;
+  repoUrl?: string;
+  repoName?: string;
+}
+
 export interface ResolvedUserSite extends UserSiteEntry {
   storeName: string;
   paid: boolean;
+  paidAt?: number;
   expiresAt?: number;
+  deploy?: ResolvedDeployInfo;
 }
 
 export async function getActiveUserSites(
@@ -85,12 +103,24 @@ export async function getActiveUserSites(
         ? (JSON.parse(metaRaw) as Record<string, unknown>)
         : (metaRaw as Record<string, unknown>);
 
+    const deployRaw = meta.deploy as
+      | { pagesUrl?: string; repoUrl?: string; repoName?: string }
+      | undefined;
+
     resolved.push({
       siteId: entry.siteId,
       createdAt: entry.createdAt,
       storeName: (meta.storeName as string) ?? "未命名",
       paid: meta.paid === true,
+      paidAt: meta.paidAt as number | undefined,
       expiresAt: meta.expiresAt as number | undefined,
+      deploy: deployRaw
+        ? {
+            pagesUrl: deployRaw.pagesUrl,
+            repoUrl: deployRaw.repoUrl,
+            repoName: deployRaw.repoName,
+          }
+        : undefined,
     });
     stillValidIds.add(entry.siteId);
   }
