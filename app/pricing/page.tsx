@@ -48,6 +48,9 @@ export default function PricingPage() {
             >
               定價
             </Link>
+            <Link href="/guide" className="hover:text-[var(--color-primary)]">
+              使用說明
+            </Link>
             <Link
               href="/changelog"
               className="hover:text-[var(--color-primary)]"

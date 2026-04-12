@@ -184,6 +184,9 @@ export default function ChangelogPage() {
             <Link href="/pricing" className="hover:text-[var(--color-primary)]">
               定價
             </Link>
+            <Link href="/guide" className="hover:text-[var(--color-primary)]">
+              使用說明
+            </Link>
             <Link
               href="/changelog"
               className="font-semibold text-[var(--color-primary)]"

@@ -47,6 +47,12 @@ export default async function HomePage() {
               定價
             </Link>
             <Link
+              href="/guide"
+              className="hidden sm:inline hover:text-[var(--color-primary)]"
+            >
+              使用說明
+            </Link>
+            <Link
               href="/changelog"
               className="hidden sm:inline hover:text-[var(--color-primary)]"
             >
