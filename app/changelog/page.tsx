@@ -29,6 +29,18 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    date: "2026-04-12",
+    tag: "新功能",
+    title: "5888 生態系導覽 + 品牌識別全面升級",
+    items: [
+      "所有頁面 footer 新增「5888 生態系」區塊,可一鍵回到錢包主頁、查看點數明細、買月費",
+      "共用 EcosystemFooter component — 未來調整一次改全部,不會各頁面各自飄移",
+      "為錢包主頁卡片製作了品牌 logo (32/64/512 PNG + SVG),紫粉漸層 + 圓角方框",
+      "首頁 meta description / Open Graph 圖片同步更新,SNS 分享時會顯示 logo",
+      "正式上線到 https://5888-website-assistant.vercel.app (公開 beta)",
+    ],
+  },
+  {
     date: "2026-04-11",
     tag: "修補",
     title: "付款回跳在 tunnel/proxy 環境下會卡住",
