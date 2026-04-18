@@ -1,13 +1,18 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth, getUserKey } from "@/lib/auth";
-import { AccountChip } from "@/components/AccountChip";
+import { SiteHeader } from "@/components/SiteHeader";
 import { EcosystemFooter } from "@/components/EcosystemFooter";
 import { getActiveUserSites, type ResolvedUserSite } from "@/lib/userSites";
 
 export const metadata = {
   title: "我的網站 | 5888 網站助手",
   description: "查看你用 5888 網站助手生成過的所有店家網站,包含已付款的永久版本與已部署到 GitHub Pages 的公開網址。",
+  openGraph: {
+    title: "我的網站 | 5888 網站助手",
+    description: "管理你所有的店家網站,一頁看完所有生成過的作品。",
+    images: ["/logo-512.png"],
+  },
 };
 
 // Do not cache — this page must reflect fresh Redis state every visit.
@@ -143,32 +148,7 @@ export default async function MySitesPage() {
   return (
     <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)]">
       {/* ============ HEADER ============ */}
-      <header className="sticky top-0 z-20 border-b border-[var(--color-border)] bg-white/80 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-xl font-black">
-            <span className="text-[var(--color-primary)]">5888</span>
-            <span className="ml-1">網站助手</span>
-          </Link>
-          <nav className="flex items-center gap-5 text-sm">
-            <Link href="/" className="hover:text-[var(--color-primary)]">
-              首頁
-            </Link>
-            <Link
-              href="/my-sites"
-              className="font-semibold text-[var(--color-primary)]"
-            >
-              我的網站
-            </Link>
-            <Link
-              href="/pricing"
-              className="hidden sm:inline hover:text-[var(--color-primary)]"
-            >
-              定價
-            </Link>
-            <AccountChip variant="compact" />
-          </nav>
-        </div>
-      </header>
+      <SiteHeader activePath="/my-sites" />
 
       {/* ============ HERO ============ */}
       <section className="border-b border-[var(--color-border)] bg-gradient-to-br from-[var(--color-primary)]/5 via-white to-[var(--color-accent)]/5">

@@ -108,6 +108,7 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
             price={PRICING.FULL_UNLOCK_TWD}
             balance={walletBalance}
             images={imageSlots}
+            initialDeploy={meta.deploy ?? null}
           />
           <div className="border-l border-[var(--color-border)] pl-3">
             <AccountChip variant="compact" />

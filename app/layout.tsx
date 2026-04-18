@@ -5,6 +5,7 @@ import { isAdminEmail } from "@/lib/admin";
 import { AdminResetButton } from "@/components/AdminResetButton";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://5888-website-assistant.vercel.app"),
   title: "5888 網站助手｜AI 店家網站產生器",
   description:
     "填店名 → AI 出網站,24 小時預覽免費試用。一鍵為你的實體店家生成符合 SEO / AEO / GEO 標準的單頁宣傳網站。",

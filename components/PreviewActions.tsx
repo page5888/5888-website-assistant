@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ImageReplaceModal, type ImageSlotRow } from "./ImageReplaceModal";
 
 export function PreviewActions({
@@ -9,6 +9,7 @@ export function PreviewActions({
   price,
   balance,
   images = [],
+  initialDeploy = null,
 }: {
   siteId: string;
   initialPaid: boolean;
@@ -16,16 +17,56 @@ export function PreviewActions({
   balance: number;
   /** Image slots parsed from the stored HTML — only populated for paid sites. */
   images?: ImageSlotRow[];
+  /** Previously stored deploy result from Redis meta — so returning users see the link. */
+  initialDeploy?: { pagesUrl: string; repoUrl: string } | null;
 }) {
   const [paid] = useState(initialPaid);
   const [busy, setBusy] = useState<"pay" | "deploy" | "download" | null>(null);
   const [deployResult, setDeployResult] = useState<{
     pagesUrl: string;
     repoUrl: string;
-  } | null>(null);
+  } | null>(initialDeploy);
+  /** Whether the deployed Pages URL is live (not 404).
+   *  If we already have a stored deploy result (returning user), assume live. */
+  const [pagesLive, setPagesLive] = useState<boolean | null>(
+    initialDeploy ? true : null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
+
+  /**
+   * Poll the deployed Pages URL via our server-side proxy to avoid CORS.
+   * GitHub Pages first build takes ~30-60s; we check every 8s up to ~2 min.
+   * Once live, stop polling and show a green "已上線" badge.
+   */
+  const checkPagesLive = useCallback(async (url: string) => {
+    setPagesLive(null);
+    for (let i = 0; i < 15; i++) {
+      await new Promise((r) => setTimeout(r, 8000));
+      try {
+        const res = await fetch(
+          `/api/check-deploy?url=${encodeURIComponent(url)}`,
+          { cache: "no-store" },
+        );
+        const data = await res.json();
+        if (data.live) {
+          setPagesLive(true);
+          return;
+        }
+      } catch {
+        // network error — keep trying
+      }
+    }
+    // After ~2 minutes of polling, assume it's live
+    setPagesLive(true);
+  }, []);
+
+  useEffect(() => {
+    if (deployResult && pagesLive === null) {
+      checkPagesLive(deployResult.pagesUrl);
+    }
+  }, [deployResult, pagesLive, checkPagesLive]);
 
   // The 5888 central wallet does NOT support partial redemption. The user
   // can either (a) redeem the full order with points if balance >= price,
@@ -111,20 +152,54 @@ export function PreviewActions({
 
   if (deployResult) {
     return (
-      <div className="text-right">
-        <p className="text-sm font-medium text-green-700">✅ 部署完成!</p>
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Deploy status + link */}
+        <div className="text-right">
+          <div className="flex items-center justify-end gap-2">
+            <p className="text-sm font-medium text-green-700">✅ 已部署</p>
+            {pagesLive === true && (
+              <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-700">
+                已上線
+              </span>
+            )}
+            {pagesLive === null && (
+              <span className="animate-pulse rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                建構中…
+              </span>
+            )}
+          </div>
+          <a
+            href={deployResult.pagesUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-[var(--color-primary)] underline"
+            aria-label="開啟已部署的網站"
+          >
+            {deployResult.pagesUrl}
+          </a>
+          {pagesLive !== true && (
+            <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
+              GitHub Pages 首次建構約需 30-60 秒,請稍候
+            </p>
+          )}
+        </div>
+        {/* Still show edit/image/download buttons after deploy */}
         <a
-          href={deployResult.pagesUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-[var(--color-primary)] underline"
-          aria-label="開啟已部署的網站"
+          href={`/preview/${encodeURIComponent(siteId)}/edit`}
+          className="rounded-full border-2 border-[var(--color-primary)]/70 px-4 py-2 text-sm font-semibold text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-foreground)]"
+          aria-label="修改網站文字內容"
         >
-          {deployResult.pagesUrl}
+          ✏️ 修改文字
         </a>
-        <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-          首次 build 約需 30-60 秒,若 404 請稍候重整
-        </p>
+        <button
+          type="button"
+          onClick={download}
+          disabled={busy !== null}
+          className="rounded-full border-2 border-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-foreground)] disabled:opacity-50"
+          aria-label="下載 HTML 檔案"
+        >
+          ⬇️ 下載
+        </button>
       </div>
     );
   }

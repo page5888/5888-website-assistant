@@ -200,3 +200,134 @@ export async function generateSiteHtml(opts: GenerateOptions): Promise<string> {
   // If we got here, every fallback failed
   throw lastError ?? new Error("All Claude models in the fallback chain failed");
 }
+
+// ============================================================
+// Template-based generation
+// ============================================================
+
+import {
+  TEMPLATE_SYSTEM_PROMPT,
+  buildTemplateUserPrompt,
+  fillTemplate,
+} from "./templatePrompt";
+import { readTemplate, autoPickTemplate } from "./templates";
+
+export interface GenerateWithTemplateOptions extends BuildPromptInput {
+  model: ClaudeModelChoice;
+  templateId: string;
+}
+
+/**
+ * Generate a site using a pre-designed HTML template.
+ *
+ * 1. Ask Claude to return a JSON object with content & colors
+ * 2. Fill the JSON values into the template HTML
+ * 3. Post-process (filter CSS, footer check)
+ *
+ * Falls back to freeform generation if template filling fails.
+ */
+export async function generateWithTemplate(
+  opts: GenerateWithTemplateOptions,
+): Promise<string> {
+  const resolvedTemplateId =
+    opts.templateId === "auto"
+      ? autoPickTemplate(opts.industryHint ?? "")
+      : opts.templateId;
+
+  let templateHtml: string;
+  try {
+    templateHtml = readTemplate(resolvedTemplateId);
+  } catch {
+    console.warn(`[anthropic] template ${resolvedTemplateId} not found, falling back to freeform`);
+    return generateSiteHtml(opts);
+  }
+
+  const chain = MODEL_CHAINS[opts.model] ?? MODEL_CHAINS.sonnet;
+
+  let lastError: unknown;
+  for (const modelId of chain) {
+    let attempt = 0;
+    const maxAttempts = 3;
+    while (true) {
+      try {
+        const response = await anthropic.messages.create({
+          model: modelId,
+          max_tokens: 8000, // JSON output is much smaller than full HTML
+          system: TEMPLATE_SYSTEM_PROMPT,
+          messages: [
+            {
+              role: "user",
+              content: buildTemplateUserPrompt(opts, opts.templateId),
+            },
+          ],
+        });
+
+        const textBlock = response.content.find((b) => b.type === "text");
+        if (!textBlock || textBlock.type !== "text") {
+          throw new Error("Claude did not return any text content");
+        }
+
+        let jsonStr = textBlock.text.trim();
+        // Strip markdown fences if present
+        jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "");
+
+        let data: Record<string, unknown>;
+        try {
+          data = JSON.parse(jsonStr);
+        } catch (parseErr) {
+          console.error("[anthropic] Failed to parse template JSON:", jsonStr.substring(0, 200));
+          throw new Error(`Template JSON parse failed: ${(parseErr as Error).message}`);
+        }
+
+        // Fill template with the JSON data
+        let html = fillTemplate(templateHtml, data, opts.imageSlots);
+
+        // Inject unified filter CSS
+        if (!html.includes("5888-unified-filter") && /<\/head>/i.test(html)) {
+          html = html.replace(/<\/head>/i, `${UNIFIED_FILTER_CSS}\n</head>`);
+        }
+
+        // Verify footer
+        if (!html.includes("幸福瓢蟲手作雜貨")) {
+          console.warn("[anthropic] template fill missing footer — auto-injecting");
+          const footer = `<footer style="padding:2rem 1rem;text-align:center;font-size:0.875rem;color:var(--muted,#6b7280);border-top:1px solid var(--border,#e5e7eb);margin-top:3rem;">${escapeHtml(opts.storeName)} ｜ 2026 Design by 幸福瓢蟲手作雜貨</footer>`;
+          html = html.replace(/<\/body>/i, `${footer}</body>`);
+        }
+
+        console.log(`[anthropic] template=${resolvedTemplateId} model=${modelId}`);
+        return html;
+      } catch (err: unknown) {
+        lastError = err;
+        const status =
+          typeof err === "object" && err !== null && "status" in err
+            ? (err as { status?: number }).status
+            : undefined;
+        const message =
+          err instanceof Error ? err.message.toLowerCase() : String(err).toLowerCase();
+
+        const isTransient =
+          status === 500 || status === 502 || status === 503 || status === 529 ||
+          message.includes("overloaded") || message.includes("internal server error");
+
+        const isModelUnavailable =
+          status === 404 || status === 424 ||
+          message.includes("not_found_error") || message.includes("could not serve");
+
+        if (isTransient && attempt + 1 < maxAttempts) {
+          attempt++;
+          await sleep(1500 * attempt);
+          continue;
+        }
+        if (isTransient || isModelUnavailable) {
+          console.warn(`[anthropic] template model=${modelId} failed (${status}), trying next`);
+          break;
+        }
+        throw err;
+      }
+    }
+  }
+
+  // If template generation failed entirely, fall back to freeform
+  console.warn("[anthropic] template generation failed, falling back to freeform");
+  return generateSiteHtml(opts);
+}

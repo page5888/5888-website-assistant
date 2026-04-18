@@ -11,8 +11,10 @@ export interface DeployResult {
 
 /**
  * Deploy the given index.html as a new public GitHub repo with Pages enabled.
- * Returns the GitHub Pages URL. Note: Pages first build takes ~30-60s, so
- * the URL may 404 briefly after return.
+ * Also uploads SEO essentials: robots.txt, sitemap.xml, .nojekyll, 404.html.
+ *
+ * Before uploading, replaces {{CANONICAL_URL}} placeholders in the HTML with
+ * the real Pages URL so canonical, OG, and schema URLs are correct.
  */
 export async function deployHtmlToPages(
   html: string,
@@ -25,6 +27,49 @@ export async function deployHtmlToPages(
     .slice(0, 40) || "site";
   const repoName = `site-${safeSlug}-${Date.now()}`;
 
+  const pagesUrl = `https://${OWNER}.github.io/${repoName}/`;
+
+  // Replace canonical URL placeholders with the real deployed URL
+  const finalHtml = html.replaceAll("{{CANONICAL_URL}}", pagesUrl);
+
+  // Generate SEO support files
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const robotsTxt = `User-agent: *\nAllow: /\nSitemap: ${pagesUrl}sitemap.xml\n`;
+  const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${pagesUrl}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`;
+
+  // Simple branded 404 page
+  const storeName = slug;
+  const fourOhFourHtml = `<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>找不到頁面 | ${storeName}</title>
+  <style>
+    body { font-family: 'Noto Sans TC', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #FAFAF7; color: #1A1A20; }
+    .box { text-align: center; padding: 3rem; }
+    h1 { font-size: 4rem; font-weight: 900; margin: 0; opacity: 0.15; }
+    p { font-size: 1.125rem; margin-top: 1rem; }
+    a { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>404</h1>
+    <p>找不到這個頁面</p>
+    <p><a href="/">回到 ${storeName} 首頁</a></p>
+  </div>
+</body>
+</html>`;
+
   // 1. Create the repo (auto_init so the default branch exists)
   const { data: repo } = await octokit.repos.createForAuthenticatedUser({
     name: repoName,
@@ -33,14 +78,72 @@ export async function deployHtmlToPages(
     auto_init: true,
   });
 
-  // 2. Upload index.html to the default branch
-  await octokit.repos.createOrUpdateFileContents({
+  const branch = repo.default_branch ?? "main";
+
+  // 2. Upload all files in parallel using the Git tree API for a single commit
+  //    This is faster than sequential createOrUpdateFileContents calls.
+  const files: { path: string; content: string }[] = [
+    { path: "index.html", content: finalHtml },
+    { path: "robots.txt", content: robotsTxt },
+    { path: "sitemap.xml", content: sitemapXml },
+    { path: "404.html", content: fourOhFourHtml },
+    { path: ".nojekyll", content: "" },
+  ];
+
+  // Get the latest commit SHA to build the tree on top of
+  const { data: refData } = await octokit.git.getRef({
     owner: OWNER,
     repo: repoName,
-    path: "index.html",
-    message: "feat: initial generated site",
-    content: Buffer.from(html, "utf-8").toString("base64"),
-    branch: repo.default_branch ?? "main",
+    ref: `heads/${branch}`,
+  });
+  const latestCommitSha = refData.object.sha;
+
+  // Create blobs for each file
+  const blobPromises = files.map(async (f) => {
+    const { data: blob } = await octokit.git.createBlob({
+      owner: OWNER,
+      repo: repoName,
+      content: Buffer.from(f.content, "utf-8").toString("base64"),
+      encoding: "base64",
+    });
+    return { path: f.path, sha: blob.sha };
+  });
+  const blobs = await Promise.all(blobPromises);
+
+  // Create tree
+  const { data: tree } = await octokit.git.createTree({
+    owner: OWNER,
+    repo: repoName,
+    base_tree: (
+      await octokit.git.getCommit({
+        owner: OWNER,
+        repo: repoName,
+        commit_sha: latestCommitSha,
+      })
+    ).data.tree.sha,
+    tree: blobs.map((b) => ({
+      path: b.path,
+      mode: "100644" as const,
+      type: "blob" as const,
+      sha: b.sha,
+    })),
+  });
+
+  // Create commit
+  const { data: commit } = await octokit.git.createCommit({
+    owner: OWNER,
+    repo: repoName,
+    message: "feat: initial generated site with SEO essentials",
+    tree: tree.sha,
+    parents: [latestCommitSha],
+  });
+
+  // Update ref
+  await octokit.git.updateRef({
+    owner: OWNER,
+    repo: repoName,
+    ref: `heads/${branch}`,
+    sha: commit.sha,
   });
 
   // 3. Enable GitHub Pages on main / root
@@ -49,7 +152,7 @@ export async function deployHtmlToPages(
       owner: OWNER,
       repo: repoName,
       source: {
-        branch: repo.default_branch ?? "main",
+        branch,
         path: "/",
       },
     });
@@ -62,6 +165,6 @@ export async function deployHtmlToPages(
   return {
     repoName,
     repoUrl: repo.html_url,
-    pagesUrl: `https://${OWNER}.github.io/${repoName}/`,
+    pagesUrl,
   };
 }

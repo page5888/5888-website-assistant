@@ -35,6 +35,7 @@ const BodySchema = z.object({
   address: z.string().max(200).optional(),
   phone: z.string().max(30).optional(),
   model: z.enum(["sonnet", "opus"]).default("sonnet"),
+  template: z.enum(["auto", "editorial", "bold"]).default("auto"),
   imageSlots: z
     .array(ImageSlotSchema)
     .min(MIN_REQUIRED_SLOTS, `至少需要 ${MIN_REQUIRED_SLOTS} 張必填照片`)
@@ -130,10 +131,13 @@ export async function POST(req: Request) {
   });
   const sources = [`slots:${imageSlots.length}`];
 
-  // 7. Call Claude
+  // 7. Call Claude — template mode or freeform mode
   let rawHtml: string;
   try {
-    rawHtml = await generateSiteHtml({
+    const templateId = input.template ?? "auto";
+    // Always use template mode — more consistent design, better SEO
+    const { generateWithTemplate } = await import("@/lib/anthropic");
+    rawHtml = await generateWithTemplate({
       storeName: input.storeName,
       sourceUrl: input.sourceUrl || undefined,
       fbUrl: input.fbUrl || undefined,
@@ -142,6 +146,7 @@ export async function POST(req: Request) {
       phone: input.phone,
       imageSlots,
       model: input.model as ClaudeModelChoice,
+      templateId,
     });
   } catch (err) {
     console.error("[generate] claude error", err);
@@ -167,7 +172,22 @@ export async function POST(req: Request) {
   //    will get the clean HTML served from the stored "clean" key).
   const watermarkedHtml = injectWatermark(rawHtml);
 
-  // 10. Store in Redis — 24 hour TTL for free tier. On successful payment
+  // 10. Run SEO quality check on the generated HTML
+  let seoReport: import("@/lib/seoChecker").SeoReport | null = null;
+  try {
+    const { runSeoCheck } = await import("@/lib/seoChecker");
+    seoReport = runSeoCheck(rawHtml);
+    if (seoReport.summary.fail > 0) {
+      console.warn(
+        `[generate] SEO check: ${seoReport.summary.fail} fails, ${seoReport.summary.warn} warns`,
+        seoReport.results.filter((r) => r.level === "fail").map((r) => r.title),
+      );
+    }
+  } catch (err) {
+    console.error("[generate] SEO check failed to run:", err);
+  }
+
+  // 11. Store in Redis — 24 hour TTL for free tier. On successful payment
   //     we'll re-set these keys WITHOUT TTL to make them permanent.
   const siteId = nanoid(12);
   if (hasRedis) {
@@ -175,7 +195,7 @@ export async function POST(req: Request) {
     await redis.set(`site:${siteId}`, watermarkedHtml, { ex: TTL.FREE_SITE });
     // Clean version (no watermark) — unlocked after payment
     await redis.set(`site:${siteId}:clean`, rawHtml, { ex: TTL.FREE_SITE });
-    // Metadata
+    // Metadata (includes SEO report summary for dashboard visibility)
     await redis.set(
       `site:${siteId}:meta`,
       JSON.stringify({
@@ -186,6 +206,7 @@ export async function POST(req: Request) {
         model: input.model,
         owner: userKey,
         paid: false,
+        seo: seoReport?.summary ?? null,
       }),
       { ex: TTL.FREE_SITE },
     );
@@ -200,5 +221,6 @@ export async function POST(req: Request) {
     previewUrl: `/preview/${siteId}`,
     imageSources: sources,
     expiresAt: Date.now() + TTL.FREE_SITE * 1000,
+    seo: seoReport?.summary ?? null,
   });
 }

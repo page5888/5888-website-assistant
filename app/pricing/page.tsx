@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { SiteHeader } from "@/components/SiteHeader";
 import { EcosystemFooter } from "@/components/EcosystemFooter";
 
 export const metadata = {
   title: "定價 | 5888 網站助手",
   description:
     "免費試用 2 次,完整版一次付費 NT$490 永久保留、逐段改文字、逐張換圖、自動部署到 GitHub。",
+  openGraph: {
+    title: "定價 | 5888 網站助手",
+    description: "一次付費 NT$490,終身擁有你的店家網站。",
+    images: ["/logo-512.png"],
+  },
 };
 
 const FREE_FEATURES = [
@@ -32,34 +38,7 @@ export default function PricingPage() {
   return (
     <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)]">
       {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-[var(--color-border)] bg-white/80 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-xl font-black">
-            <span className="text-[var(--color-primary)]">5888</span>
-            <span className="ml-1">網站助手</span>
-          </Link>
-          <nav className="flex items-center gap-6 text-sm">
-            <Link href="/" className="hover:text-[var(--color-primary)]">
-              首頁
-            </Link>
-            <Link
-              href="/pricing"
-              className="font-semibold text-[var(--color-primary)]"
-            >
-              定價
-            </Link>
-            <Link href="/guide" className="hover:text-[var(--color-primary)]">
-              使用說明
-            </Link>
-            <Link
-              href="/changelog"
-              className="hover:text-[var(--color-primary)]"
-            >
-              更新紀錄
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader activePath="/pricing" />
 
       {/* Hero */}
       <section className="mx-auto max-w-4xl px-6 pb-12 pt-20 text-center">

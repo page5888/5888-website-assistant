@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth, signIn, getUserKey } from "@/lib/auth";
 import { GeneratorForm } from "@/components/GeneratorForm";
-import { AccountChip } from "@/components/AccountChip";
+import { SiteHeader } from "@/components/SiteHeader";
 import { EcosystemFooter } from "@/components/EcosystemFooter";
 import { getActiveUserSites, HOMEPAGE_BANNER_LIMIT } from "@/lib/userSites";
 
@@ -21,47 +21,7 @@ export default async function HomePage() {
   return (
     <main className="flex min-h-screen flex-col">
       {/* ============ HEADER ============ */}
-      <header className="sticky top-0 z-50 border-b border-[var(--color-border)]/60 bg-[var(--color-background)]/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link
-            href="/"
-            className="flex items-center gap-1 text-2xl font-black tracking-tight"
-            aria-label="回到 5888 網站助手首頁"
-          >
-            <span className="text-gradient">5888</span>
-            <span>網站助手</span>
-          </Link>
-          <nav aria-label="主選單" className="flex items-center gap-5 text-sm">
-            {session?.user && (
-              <Link
-                href="/my-sites"
-                className="hover:text-[var(--color-primary)]"
-              >
-                我的網站
-              </Link>
-            )}
-            <Link
-              href="/pricing"
-              className="hidden sm:inline hover:text-[var(--color-primary)]"
-            >
-              定價
-            </Link>
-            <Link
-              href="/guide"
-              className="hidden sm:inline hover:text-[var(--color-primary)]"
-            >
-              使用說明
-            </Link>
-            <Link
-              href="/changelog"
-              className="hidden sm:inline hover:text-[var(--color-primary)]"
-            >
-              更新紀錄
-            </Link>
-            <AccountChip />
-          </nav>
-        </div>
-      </header>
+      <SiteHeader activePath="/" maxWidth="max-w-7xl" />
 
       {/* ============ RECENT SITES BANNER ============ */}
       {recentSites.length > 0 && (

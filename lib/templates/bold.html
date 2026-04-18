@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<!--
+  Template: Bold
+  Design: Full-bleed hero, dark sections, strong CTAs, high contrast
+  Best for: restaurant, gym, auto repair, locksmith, barber, sports
+-->
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{META_TITLE}}</title>
+  <meta name="description" content="{{META_DESCRIPTION}}">
+  <link rel="canonical" href="{{CANONICAL_URL}}">
+  <meta name="theme-color" content="{{PRIMARY_COLOR}}">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{META_TITLE}}">
+  <meta property="og:description" content="{{META_DESCRIPTION}}">
+  <meta property="og:image" content="{{HERO_IMAGE_URL}}">
+  <meta property="og:url" content="{{CANONICAL_URL}}">
+  <meta property="og:locale" content="zh_TW">
+  <meta property="og:site_name" content="{{STORE_NAME}}">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{META_TITLE}}">
+  <meta name="twitter:description" content="{{META_DESCRIPTION}}">
+  <meta name="twitter:image" content="{{HERO_IMAGE_URL}}">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '{{COLOR_BG}}',
+            fg: '{{COLOR_FG}}',
+            muted: '{{COLOR_MUTED}}',
+            border: '{{COLOR_BORDER}}',
+            primary: '{{PRIMARY_COLOR}}',
+          },
+          fontFamily: {
+            display: ["'Playfair Display'", "'Noto Serif TC'", 'serif'],
+            serif: ["'Noto Serif TC'", 'serif'],
+            sans: ["'Noto Sans TC'", '-apple-system', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --bg: {{COLOR_BG}};
+      --fg: {{COLOR_FG}};
+      --muted: {{COLOR_MUTED}};
+      --border: {{COLOR_BORDER}};
+      --primary: {{PRIMARY_COLOR}};
+    }
+    body { background: var(--bg); color: var(--fg); }
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .img-hover { transition: transform 0.6s ease-out; }
+    .img-hover:hover { transform: scale(1.04); }
+    .btn-solid { transition: all 0.3s ease; }
+    .btn-solid:hover { opacity: 0.88; }
+    .btn-solid:active { transform: scale(0.97); }
+    .btn-outline { transition: all 0.3s ease; }
+    .btn-outline:hover { background: var(--primary); color: var(--bg); border-color: var(--primary); }
+    .hero-fade-in { animation: heroIn 1s cubic-bezier(0.16,1,0.3,1) both; }
+    .hero-fade-in-delay { animation: heroIn 1s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+    @keyframes heroIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+
+  <!-- Schema: LocalBusiness -->
+  <script type="application/ld+json">
+  {{SCHEMA_LOCAL_BUSINESS}}
+  </script>
+
+  <!-- Schema: FAQPage -->
+  <script type="application/ld+json">
+  {{SCHEMA_FAQ}}
+  </script>
+</head>
+<body class="font-sans antialiased">
+
+  <!-- ============ HERO: Full-bleed Photo + Overlay ============ -->
+  <header class="relative flex min-h-screen items-end">
+    <img
+      data-5888-slot="hero"
+      src="{{HERO_IMAGE_URL}}"
+      alt="{{HERO_IMAGE_ALT}}"
+      loading="eager"
+      fetchpriority="high"
+      decoding="async"
+      width="1600"
+      height="1067"
+      class="absolute inset-0 h-full w-full object-cover"
+    >
+    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10"></div>
+
+    <div class="relative z-10 w-full px-8 pb-16 pt-40 text-white lg:px-16 lg:pb-24">
+      <div class="mx-auto max-w-[1200px]">
+        <h1 class="font-display leading-[0.92] tracking-[-0.03em]">
+          <span data-5888-text="hero.title" class="hero-fade-in block text-[clamp(3rem,10vw,7rem)]">{{HERO_LOCATION_KEYWORD}}</span>
+          <span data-5888-text="hero.brand" class="hero-fade-in-delay block text-[clamp(2rem,6vw,4.5rem)] text-primary">{{STORE_NAME}}</span>
+        </h1>
+        <p data-5888-text="hero.subtitle" class="hero-fade-in-delay mt-6 max-w-lg text-lg leading-relaxed opacity-80">{{HERO_TAGLINE}}</p>
+
+        <div class="mt-10 flex flex-wrap gap-4">
+          <a href="tel:{{PHONE_INTL}}" class="btn-solid inline-flex items-center gap-2 bg-primary px-8 py-4 text-sm font-bold text-white" aria-label="撥打電話 {{PHONE_DISPLAY}}">{{CTA_PHONE_TEXT}}</a>
+          <a href="#contact" class="btn-outline inline-flex items-center gap-2 border-2 border-white/60 px-8 py-4 text-sm font-bold text-white" aria-label="查看營業時間">查看營業資訊</a>
+        </div>
+
+        <div class="mt-16 flex flex-wrap gap-8 text-sm opacity-60">
+          <span data-5888-text="hero.meta">{{HERO_META}}</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ SERVICES: Stacked Panels ============ -->
+    <section class="reveal px-8 py-24 lg:px-16 lg:py-40" aria-labelledby="services-heading">
+      <div class="mx-auto max-w-[1200px]">
+        <p class="text-xs font-bold uppercase tracking-[0.25em] text-primary">Services</p>
+        <h2 data-5888-text="section.services.title" id="services-heading" class="mt-3 font-display text-[clamp(2rem,5vw,4rem)] font-bold leading-tight tracking-tight">{{SERVICES_TITLE}}</h2>
+
+        <div class="mt-16 space-y-8">
+          <!-- Service 1: Wide panel -->
+          <div class="group grid overflow-hidden md:grid-cols-2">
+            <div class="overflow-hidden">
+              <img data-5888-slot="product1" src="{{PRODUCT1_IMAGE_URL}}" alt="{{PRODUCT1_IMAGE_ALT}}" loading="lazy" width="800" height="600" class="img-hover aspect-[4/3] w-full object-cover">
+            </div>
+            <div class="flex flex-col justify-center bg-fg px-8 py-10 text-bg lg:px-14">
+              <h3 data-5888-text="service.1.title" class="font-serif text-2xl font-bold">{{SERVICE_1_TITLE}}</h3>
+              <p data-5888-text="service.1.desc" class="mt-4 text-sm leading-relaxed opacity-70">{{SERVICE_1_DESC}}</p>
+            </div>
+          </div>
+
+          <!-- Service 2+3: Side by side -->
+          <div class="grid gap-8 md:grid-cols-2">
+            <div>
+              <div class="overflow-hidden">
+                <img data-5888-slot="product2" src="{{PRODUCT2_IMAGE_URL}}" alt="{{PRODUCT2_IMAGE_ALT}}" loading="lazy" width="800" height="600" class="img-hover aspect-[4/3] w-full object-cover">
+              </div>
+              <h3 data-5888-text="service.2.title" class="mt-5 font-serif text-xl font-bold">{{SERVICE_2_TITLE}}</h3>
+              <p data-5888-text="service.2.desc" class="mt-2 text-sm leading-relaxed text-muted">{{SERVICE_2_DESC}}</p>
+            </div>
+            <div>
+              <div class="overflow-hidden">
+                <img data-5888-slot="product3" src="{{PRODUCT3_IMAGE_URL}}" alt="{{PRODUCT3_IMAGE_ALT}}" loading="lazy" width="800" height="600" class="img-hover aspect-[4/3] w-full object-cover">
+              </div>
+              <h3 data-5888-text="service.3.title" class="mt-5 font-serif text-xl font-bold">{{SERVICE_3_TITLE}}</h3>
+              <p data-5888-text="service.3.desc" class="mt-2 text-sm leading-relaxed text-muted">{{SERVICE_3_DESC}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ABOUT: Image + Story ============ -->
+    <section class="reveal bg-fg text-bg px-8 py-24 lg:px-16 lg:py-40" aria-labelledby="about-heading">
+      <div class="mx-auto grid max-w-[1200px] gap-12 lg:grid-cols-2">
+        <div class="overflow-hidden">
+          <img data-5888-slot="interior1" src="{{INTERIOR1_IMAGE_URL}}" alt="{{INTERIOR1_IMAGE_ALT}}" loading="lazy" width="800" height="1000" class="img-hover w-full object-cover" style="aspect-ratio: 4/5;">
+        </div>
+        <div class="flex flex-col justify-center">
+          <p class="text-xs font-bold uppercase tracking-[0.25em] text-primary">About</p>
+          <h2 data-5888-text="section.about.title" id="about-heading" class="mt-3 font-serif text-[clamp(1.8rem,4vw,3rem)] font-bold leading-tight">{{ABOUT_TITLE}}</h2>
+          <div class="mt-1 h-px w-10 bg-primary opacity-50"></div>
+          <p data-5888-text="about.body.1" class="mt-8 text-base leading-[1.9] opacity-70">{{ABOUT_P1}}</p>
+          <p data-5888-text="about.body.2" class="mt-6 text-base leading-[1.9] opacity-70">{{ABOUT_P2}}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DETAIL / TEAM ============ -->
+    <section class="reveal px-8 py-24 lg:px-16 lg:py-40">
+      <div class="mx-auto grid max-w-[1200px] gap-6 md:grid-cols-2">
+        <div class="overflow-hidden">
+          <img data-5888-slot="detail1" src="{{DETAIL1_IMAGE_URL}}" alt="{{DETAIL1_IMAGE_ALT}}" loading="lazy" width="800" height="800" class="img-hover aspect-square w-full object-cover">
+        </div>
+        <div class="flex flex-col justify-center px-4 lg:px-12">
+          <blockquote class="relative">
+            <span class="absolute -left-4 -top-8 font-display text-[6rem] leading-none text-primary opacity-15" aria-hidden="true">"</span>
+            <p data-5888-text="about.body.3" class="font-serif text-xl italic leading-relaxed text-muted">{{QUOTE_TEXT}}</p>
+          </blockquote>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="reveal border-t border-[var(--border)] px-8 py-24 lg:px-16 lg:py-40" aria-labelledby="faq-heading">
+      <div class="mx-auto max-w-[720px]">
+        <p class="text-xs font-bold uppercase tracking-[0.25em] text-primary">FAQ</p>
+        <h2 data-5888-text="section.faq.title" id="faq-heading" class="mt-3 font-serif text-[clamp(1.8rem,4vw,3rem)] font-bold leading-tight">{{FAQ_TITLE}}</h2>
+        <div class="mt-12 divide-y divide-[var(--border)]">
+          <details class="group py-6">
+            <summary class="flex cursor-pointer items-center justify-between text-base font-bold">
+              <span data-5888-text="faq.1.q">{{FAQ_1_Q}}</span>
+              <span class="ml-4 text-xl text-primary transition group-open:rotate-45">+</span>
+            </summary>
+            <p data-5888-text="faq.1.a" class="mt-4 text-sm leading-relaxed text-muted">{{FAQ_1_A}}</p>
+          </details>
+          <details class="group py-6">
+            <summary class="flex cursor-pointer items-center justify-between text-base font-bold">
+              <span data-5888-text="faq.2.q">{{FAQ_2_Q}}</span>
+              <span class="ml-4 text-xl text-primary transition group-open:rotate-45">+</span>
+            </summary>
+            <p data-5888-text="faq.2.a" class="mt-4 text-sm leading-relaxed text-muted">{{FAQ_2_A}}</p>
+          </details>
+          <details class="group py-6">
+            <summary class="flex cursor-pointer items-center justify-between text-base font-bold">
+              <span data-5888-text="faq.3.q">{{FAQ_3_Q}}</span>
+              <span class="ml-4 text-xl text-primary transition group-open:rotate-45">+</span>
+            </summary>
+            <p data-5888-text="faq.3.a" class="mt-4 text-sm leading-relaxed text-muted">{{FAQ_3_A}}</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CONTACT ============ -->
+    <section id="contact" class="reveal bg-fg px-8 py-24 text-bg lg:px-16 lg:py-40" aria-labelledby="contact-heading">
+      <div class="mx-auto max-w-[1200px]">
+        <p class="text-xs font-bold uppercase tracking-[0.25em] text-primary">Contact</p>
+        <h2 data-5888-text="section.contact.title" id="contact-heading" class="mt-3 font-display text-[clamp(2rem,5vw,4rem)] font-bold leading-tight tracking-tight">{{CONTACT_TITLE}}</h2>
+
+        <div class="mt-16 grid gap-12 md:grid-cols-3">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.2em] opacity-50">地址</p>
+            <a data-5888-text="contact.address" href="{{MAPS_URL}}" target="_blank" rel="noopener noreferrer" class="mt-3 block font-serif text-xl font-bold leading-snug transition hover:text-primary" aria-label="在 Google 地圖開啟">{{ADDRESS}}</a>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.2em] opacity-50">電話</p>
+            <a data-5888-text="contact.phone" href="tel:{{PHONE_INTL}}" class="mt-3 block font-serif text-xl font-bold transition hover:text-primary" aria-label="撥打電話">{{PHONE_DISPLAY}}</a>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.2em] opacity-50">營業時間</p>
+            <p data-5888-text="contact.hours" class="mt-3 font-serif text-xl font-bold leading-snug">{{HOURS}}</p>
+          </div>
+        </div>
+
+        <div class="mt-12 flex flex-wrap gap-4">
+          <a href="tel:{{PHONE_INTL}}" class="btn-solid inline-flex items-center gap-2 bg-primary px-8 py-4 text-sm font-bold text-white">立即來電</a>
+          <a href="{{MAPS_URL}}" target="_blank" rel="noopener noreferrer" class="btn-outline inline-flex items-center gap-2 border-2 border-white/40 px-8 py-4 text-sm font-bold text-white">在 Google 地圖開啟</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="border-t border-[var(--border)] px-8 py-10 text-center">
+    <p class="text-sm text-muted">{{STORE_NAME}} ｜ 2026 Design by 幸福瓢蟲手作雜貨</p>
+  </footer>
+
+  <!-- Scroll reveal -->
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>

@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { SiteHeader } from "@/components/SiteHeader";
 import { EcosystemFooter } from "@/components/EcosystemFooter";
 
 export const metadata = {
   title: "使用說明 | 5888 網站助手",
   description:
     "從建立網站到付款、修改文字、換圖片、AI 圖片生成、一鍵部署,完整操作指南。",
+  openGraph: {
+    title: "使用說明 | 5888 網站助手",
+    description: "從零開始到上線,完整操作指南。",
+    images: ["/logo-512.png"],
+  },
 };
 
 /**
@@ -16,31 +22,7 @@ export default function GuidePage() {
   return (
     <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)]">
       {/* ============ HEADER ============ */}
-      <header className="sticky top-0 z-20 border-b border-[var(--color-border)] bg-white/80 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-xl font-black">
-            <span className="text-[var(--color-primary)]">5888</span>
-            <span className="ml-1">網站助手</span>
-          </Link>
-          <nav className="flex items-center gap-6 text-sm">
-            <Link href="/" className="hover:text-[var(--color-primary)]">
-              首頁
-            </Link>
-            <Link href="/pricing" className="hover:text-[var(--color-primary)]">
-              定價
-            </Link>
-            <Link
-              href="/guide"
-              className="font-semibold text-[var(--color-primary)]"
-            >
-              使用說明
-            </Link>
-            <Link href="/changelog" className="hover:text-[var(--color-primary)]">
-              更新紀錄
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader activePath="/guide" maxWidth="max-w-4xl" />
 
       {/* ============ HERO ============ */}
       <section className="border-b border-[var(--color-border)] bg-gradient-to-br from-[var(--color-primary)]/5 via-white to-[var(--color-accent)]/5">
@@ -217,24 +199,24 @@ export default function GuidePage() {
             </Tip>
           </Step>
 
-          {/* Step 8 — templates placeholder */}
+          {/* Step 8 — template selection */}
           <Step
             num={8}
-            title="選擇模板(即將推出)"
+            title="選擇設計模板"
             color="violet"
-            badge="Coming Soon"
+            badge="New"
           >
             <p>
-              目前 AI 會自動從多種排版模式中挑選最適合你店家風格的版型。
-              未來我們會推出可選擇的設計模板,讓你可以:
+              在「設計模板」下拉選單中,可以選擇網站的視覺風格:
             </p>
             <ul className="mt-3 space-y-1.5">
-              <Li>預覽不同風格的版型(例:簡約風、日式風、歐式風)</Li>
-              <Li>選定模板後再由 AI 填入你的內容與照片</Li>
-              <Li>同一組資料可以快速切換不同模板</Li>
+              <Li><strong>自動選擇</strong> — 系統依產業類別自動挑最適合的模板</Li>
+              <Li><strong>雜誌風 Editorial</strong> — 大量留白、左右分割排版、優雅 serif 字體,適合咖啡廳、花藝、選品店</Li>
+              <Li><strong>衝擊風 Bold</strong> — 全版大圖、暗底白字、強烈 CTA,適合餐廳、健身房、汽修</Li>
             </ul>
+            <Tip>模板只決定版面設計,AI 會根據你的店家資料自動填入文案、配色和 SEO 資訊。</Tip>
             <p className="mt-3 text-[var(--color-muted-foreground)]">
-              此功能開發中,請關注更新紀錄。
+              更多模板持續開發中,請關注更新紀錄。
             </p>
           </Step>
         </div>

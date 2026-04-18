@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { SiteHeader } from "@/components/SiteHeader";
 import { EcosystemFooter } from "@/components/EcosystemFooter";
 
 export const metadata = {
   title: "更新紀錄 | 5888 網站助手",
   description:
     "5888 網站助手的每次更新內容與改進紀錄。新功能、修補、效能改善都會列在這裡。",
+  openGraph: {
+    title: "更新紀錄 | 5888 網站助手",
+    description: "每次更新內容與改進紀錄,新功能、修補、效能改善。",
+    images: ["/logo-512.png"],
+  },
 };
 
 /**
@@ -171,31 +177,7 @@ export default function ChangelogPage() {
   return (
     <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)]">
       {/* ============ HEADER ============ */}
-      <header className="sticky top-0 z-20 border-b border-[var(--color-border)] bg-white/80 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-xl font-black">
-            <span className="text-[var(--color-primary)]">5888</span>
-            <span className="ml-1">網站助手</span>
-          </Link>
-          <nav className="flex items-center gap-6 text-sm">
-            <Link href="/" className="hover:text-[var(--color-primary)]">
-              首頁
-            </Link>
-            <Link href="/pricing" className="hover:text-[var(--color-primary)]">
-              定價
-            </Link>
-            <Link href="/guide" className="hover:text-[var(--color-primary)]">
-              使用說明
-            </Link>
-            <Link
-              href="/changelog"
-              className="font-semibold text-[var(--color-primary)]"
-            >
-              更新紀錄
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader activePath="/changelog" maxWidth="max-w-4xl" />
 
       {/* ============ HERO ============ */}
       <section className="border-b border-[var(--color-border)] bg-gradient-to-br from-[var(--color-primary)]/5 via-white to-[var(--color-accent)]/5">

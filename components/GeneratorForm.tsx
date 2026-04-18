@@ -13,6 +13,7 @@ interface FormState {
   address: string;
   phone: string;
   model: "sonnet" | "opus";
+  template: "auto" | "editorial" | "bold";
 }
 
 const initialForm: FormState = {
@@ -23,6 +24,7 @@ const initialForm: FormState = {
   address: "",
   phone: "",
   model: "sonnet",
+  template: "auto",
 };
 
 export function GeneratorForm() {
@@ -228,6 +230,20 @@ export function GeneratorForm() {
           className="input"
           aria-label="電話"
         />
+      </Field>
+
+      <Field label="設計模板">
+        <select
+          name="template"
+          value={form.template}
+          onChange={onChange}
+          className="input"
+          aria-label="設計模板"
+        >
+          <option value="auto">自動選擇（依產業判斷）</option>
+          <option value="editorial">雜誌風 — 大留白、左右分割、優雅（咖啡/花藝/選品）</option>
+          <option value="bold">衝擊風 — 全版大圖、暗底白字、強烈（餐廳/健身/汽修）</option>
+        </select>
       </Field>
 
       <Field label="AI 模型選擇">
