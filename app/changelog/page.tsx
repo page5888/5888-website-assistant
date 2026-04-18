@@ -35,6 +35,66 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    date: "2026-04-19",
+    tag: "新功能",
+    title: "設計模板系統 — 生成品質大升級,不再醜醜的",
+    items: [
+      "新增「雜誌風」和「衝擊風」兩套專業設計模板,AI 改為填入模板而非從零畫",
+      "雜誌風:大留白、左右分割、優雅 — 適合咖啡/花藝/選品店",
+      "衝擊風:全版大圖、暗底白字、強烈 — 適合餐廳/健身/汽修",
+      "「自動選擇」會依據產業類別幫你挑合適的模板,不確定就選這個",
+      "表單新增「設計模板」下拉,在 AI 模型選擇的上方",
+    ],
+  },
+  {
+    date: "2026-04-19",
+    tag: "改進",
+    title: "SEO 全面升級 — Google 搜尋更容易找到你的店",
+    items: [
+      "title / description 改用「地區+服務+店名」格式,長度符合 Google 最佳範圍",
+      "每個生成的網站都內建 LocalBusiness schema(14 種產業類型對照)",
+      "FAQ 區塊同步產出 FAQPage schema,有機會在搜尋結果出現折疊問答",
+      "Hero 圖改成 eager 載入 + fetchpriority=high,首屏速度提升",
+      "所有圖片都有 width / height 防止版面跳動(CLS 分數)",
+      "電話自動變成 tel: 連結,地址自動連到 Google Maps",
+      "生成後背景自動跑 8 項 SEO 檢查,有問題會記錄下來",
+    ],
+  },
+  {
+    date: "2026-04-19",
+    tag: "新功能",
+    title: "部署管線升級 — 一次上傳完整 SEO 檔案",
+    items: [
+      "改用 Git Tree API 單次 commit 上傳 5 個檔案(原本只有 index.html)",
+      "自動產生 robots.txt / sitemap.xml,告訴 Google 來爬你的網站",
+      "自動注入 canonical URL 到 HTML 的 OG / Twitter Card / schema",
+      "加上品牌化的 404.html,使用者點錯連結也看得到漂亮頁面",
+      "加上 .nojekyll 避免 GitHub Pages 誤判底線開頭的資源",
+    ],
+  },
+  {
+    date: "2026-04-19",
+    tag: "修補",
+    title: "客戶回來看預覽頁時,部署連結終於會出現了",
+    items: [
+      "之前部署完成後,客戶隔天再開預覽頁,公開網址不會顯示",
+      "改成從 Redis 讀取已部署的網址直接渲染,不用等前端重跑",
+      "新增 /api/check-deploy 定期檢查 GitHub Pages 是否已上線",
+      "上線前顯示「建構中…」琥珀色脈動,上線後換成「已上線」綠色徽章",
+    ],
+  },
+  {
+    date: "2026-04-19",
+    tag: "改進",
+    title: "全站手機版導覽列 + 共用 Header 元件",
+    items: [
+      "手機版右上角新增漢堡選單,可以切換首頁/定價/教學/更新紀錄/我的網站",
+      "建立共用 SiteHeader 元件,五個頁面從各自複製貼上改為統一管理",
+      "新增 OG 圖片與 metadataBase,分享連結到 FB / Line 會顯示 logo",
+      "新增 robots.txt 與 sitemap.ts,讓 Google 正確索引本站全部頁面",
+    ],
+  },
+  {
     date: "2026-04-12",
     tag: "新功能",
     title: "AI 圖片生成 — 沒有照片也能做出漂亮網站",
